@@ -7,13 +7,7 @@ Timeable server es un servidor que se lanzará dentro del propio instituto IES J
 Está realizado en java utilizando la tecnología de springboot que actúa como servidor para recibir peticiones
 # Arranque del proyecto
 
-Para arrancar el proyecto necesitamos usar el IDE Eclipse, una vez que ejecutemos el IDE ubicamos el proyecto que se encuentra en 
-
-```
-Reaktor_TimetableServer\src\main\java\es\iesjandula\reaktor\timetable_server
-```
-
-Y ejecutamos el fichero TimetableApplication.java
+Para arrancar el proyecto necesitamos usar el IDE Eclipse, concretamente la clase TimetableApplication.java
 
 # Peticiones del servidor
 
