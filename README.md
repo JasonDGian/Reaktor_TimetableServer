@@ -1,4 +1,4 @@
-# TIMEABLE: Proyecto encargado de gestionar los horarios de los profesores y las incidencias de los alumnos en el centro IES Jandula
+# TIMETABLE: Proyecto encargado de gestionar los horarios de los profesores y las incidencias de los alumnos en el centro IES Jandula
 
 # Descripcion
 
