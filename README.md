@@ -10,7 +10,7 @@ Está realizado en java utilizando la tecnología de springboot que actúa como 
 Para arrancar el proyecto necesitamos usar el IDE Eclipse, una vez que ejecutemos el IDE ubicamos el proyecto que se encuentra en 
 
 ```
-C:\Users\casaj\git\Reaktor\TimetableServer\src\main\java\es\iesjandula\reaktor\timetable_server
+Reaktor_TimetableServer\src\main\java\es\iesjandula\reaktor\timetable_server
 ```
 
 Y ejecutamos el fichero TimetableApplication.java
