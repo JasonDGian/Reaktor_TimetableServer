@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ruta al directorio donde se encuentra el JAR
-JAR_PATH="/root/Reaktor_TimetableServer/actions-runner/_work/Reaktor_TimetableServer/Reaktor_TimetableServer/target"
+JAR_PATH="/home/github_runners/Reaktor_TimetableServer/actions-runner/_work/Reaktor_TimetableServer/Reaktor_TimetableServer/target"
 
 # Nombre del JAR
 JAR_NAME="TimetableServer-0.0.1-SNAPSHOT-jar-with-dependencies.jar"
