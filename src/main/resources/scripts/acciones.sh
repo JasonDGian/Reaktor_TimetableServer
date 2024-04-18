@@ -8,3 +8,6 @@ sudo systemctl start timetableserver.service
 
 # Arrancar el servicio
 sudo systemctl enable timetableserver.service
+
+# Ver el estado del servicio
+sudo systemctl status timetableserver.service
