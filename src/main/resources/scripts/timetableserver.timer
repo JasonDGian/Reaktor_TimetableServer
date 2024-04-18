@@ -1,0 +1,9 @@
+[Unit]
+Description=Temporizador para iniciar el servicio timetableserver cada 5 segundos
+
+[Timer]
+OnUnitActiveSec=5s
+Unit=timetableserver.service
+
+[Install]
+WantedBy=timers.target
