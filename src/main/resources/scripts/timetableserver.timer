@@ -2,7 +2,7 @@
 Description=Temporizador para iniciar el servicio timetableserver cada 5 segundos
 
 [Timer]
-OnUnitActiveSec=5s
+OnUnitActiveSec=100s
 Unit=timetableserver.service
 
 [Install]
