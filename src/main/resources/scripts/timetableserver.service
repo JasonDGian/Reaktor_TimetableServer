@@ -1,9 +1,9 @@
 [Unit]
-Description=Demonio que comprueba si el proceso asociado está lanzado o el JAR ha cambiado
+Description=Servicio Reaktor TimetableServer
 [Service]
 User=root
-WorkingDirectory=/home/github_runners/Reaktor_TimetableServer/actions-runner/_work/Reaktor_TimetableServer/Reaktor_TimetableServer/src/main/resources/scripts
-ExecStart=/bin/bash /home/github_runners/Reaktor_TimetableServer/actions-runner/_work/Reaktor_TimetableServer/Reaktor_TimetableServer/src/main/resources/scripts/reaktor_timetableserver.sh
+WorkingDirectory=/root/servicios
+ExecStart=/bin/bash /root/servicios/reaktor_timetableserver.sh
 SuccessExitStatus=143
 TimeoutStopSec=10
 Restart=on-failure
