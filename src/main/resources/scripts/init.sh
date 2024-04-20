@@ -5,6 +5,12 @@ chmod 777 /etc/systemd/system/timetableserver.service
 chmod 777 reaktor_timetableserver.sh
 chmod 777 /etc/systemd/system/timetableserver.timer
 
+# Desabilitar si existe el servicio
+sudo systemctl disabled timetableserver.service
+
+# Parar el servicio
+sudo systemctl stop timetableserver.service
+
 # Añadir al arranque del servidor
 sudo systemctl start timetableserver.service
 
