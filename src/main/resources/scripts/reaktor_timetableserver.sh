@@ -56,7 +56,7 @@ check_process() {
         echo "El proceso no está en ejecución. Iniciando el servicio..."
 
         # Iniciar el proceso si no está en ejecución
-        nohup java -jar "$JAR_PATH/$JAR_NAME" --spring.profiles.active=VPS &
+        nohup java -jar "$JAR_PATH/$JAR_NAME" --spring.profiles.active=VPS
         
         echo "Se ha tratado de lanzar el proceso..."
 
