@@ -58,7 +58,7 @@ check_process() {
         # Iniciar el proceso si no está en ejecución
         java -jar "$JAR_PATH/$JAR_NAME" --spring.profiles.active=VPS &
         
-        ech "Se ha tratado de lanzar el proceso..."
+        echo "Se ha tratado de lanzar el proceso..."
 
     fi
 }
