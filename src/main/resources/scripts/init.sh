@@ -1,11 +1,6 @@
 #!/bin/bash
 
-if [ ! -d "$DIRECTORIO" ]; then
-    mkdir /root/servicios
-fi
-
-cp reaktor_timetableserver.sh /root/servicios
-chmod 777 /root/servicios/reaktor_timetableserver.sh
+chmod 777 reaktor_timetableserver.sh
 
 cp timetableserver.service /etc/systemd/system
 cp timetableserver.timer /etc/systemd/system
