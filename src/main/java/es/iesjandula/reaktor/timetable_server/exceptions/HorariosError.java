@@ -41,14 +41,14 @@ public class HorariosError extends Exception
 	public Map<String, String> toMap()
 	{
 		Map<String, String> map = new HashMap<String, String>();
-		map.put(code + "", code + "");
-		map.put(text, text);
+		map.put("code", "" + this.code);
+		map.put("message", this.text);
 		if(exception!=null) 
 		{
 			ObjectMapper mapper = new ObjectMapper();
 			try
 			{
-				map.put("exception",mapper.writeValueAsString(exception));
+				map.put("exception",mapper.writeValueAsString(this.exception));
 			}
 			catch (JsonProcessingException exception)
 			{
