@@ -35,6 +35,8 @@ public class JarUpdateService
         // Obtener la ruta del archivo JAR en ejecución
         String jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
         File jarFile = new File(jarFilePath);
+        
+        log.info("JAR: {}, {}, {}", jarFilePath, jarFile.lastModified(), this.lastModified);
 
         // Verificar si el archivo JAR ha sido actualizado
         if (jarFile.lastModified() > this.lastModified)
