@@ -1,6 +1,7 @@
 package es.iesjandula.reaktor.timetable_server.service;
 
 import java.io.File;
+import java.net.URISyntaxException;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -16,41 +17,33 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JarUpdateService
 {
-    private String jarFileName;
+	private String jarFilePath;
     private long lastModified;
 
     @PostConstruct
-    public void init()
-    {
-    	// Obtener la ruta del archivo JAR en ejecución
-        String jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-
-        // Eliminar el sufijo "classes!" si está presente
-        if (jarFilePath.endsWith("!/BOOT-INF/classes!/")) {
-            jarFilePath = jarFilePath.replace("!/BOOT-INF/classes!/", "");
+    public void init() {
+        try {
+            // Obtener la ruta completa donde se está ejecutando el archivo JAR
+            jarFilePath = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getAbsolutePath();
+        } catch (URISyntaxException e) {
+            // Manejar excepción si no se puede obtener la ruta del archivo JAR
+            e.printStackTrace();
         }
 
-        // Obtener solo el nombre del archivo JAR sin la ruta completa
-        jarFileName = new File(jarFilePath).getName();
-        
         // Obtener la fecha de modificación del archivo JAR
-        lastModified = new File(jarFileName).lastModified();
+        lastModified = new File(jarFilePath).lastModified();
     }
 
     @Scheduled(fixedRate = 5000) // Ejecutar cada 5 segundos
-    public void checkJarUpdate()
-    {
-    	long lastModifiedJar = new File(this.jarFileName).lastModified() ;
-    	
-        log.info("JAR: {}, {}, {}", this.jarFileName, lastModifiedJar, this.lastModified) ;
-
+    public void checkJarUpdate() {
         // Verificar si el archivo JAR ha sido actualizado
-        if (lastModifiedJar > this.lastModified)
-        {
-            log.info("¡El JAR ha sido actualizado! Finalizando la aplicación...") ;
+        if (new File(jarFilePath).lastModified() > lastModified) {
+            System.out.println("¡El JAR ha sido actualizado! Finalizando la aplicación...");
+            // Realizar cualquier limpieza o liberación de recursos necesaria antes de salir
+            // ...
 
             // Salir de la aplicación
-            System.exit(0) ;
+            System.exit(0);
         }
     }
 }
