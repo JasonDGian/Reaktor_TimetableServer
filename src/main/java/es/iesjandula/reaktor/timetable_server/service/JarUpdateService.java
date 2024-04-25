@@ -16,30 +16,28 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JarUpdateService
 {
+    private String jarFileName;
     private long lastModified;
 
     @PostConstruct
     public void init()
     {
-        // Obtener la ruta del archivo JAR en ejecución
-        String jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath() ;
-        File jarFile = new File(jarFilePath);
-
+    	// Obtener la ruta del archivo JAR en ejecución
+        this.jarFileName = new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath()).getName() ;
+        
         // Obtener la fecha de modificación del archivo JAR
-        this.lastModified = jarFile.lastModified() ;
+        this.lastModified = new File(this.jarFileName).lastModified() ;
     }
 
     @Scheduled(fixedRate = 5000) // Ejecutar cada 5 segundos
     public void checkJarUpdate()
     {
-        // Obtener la ruta del archivo JAR en ejecución
-        String jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath() ;
-        File jarFile = new File(jarFilePath) ;
-        
-        log.info("JAR: {}, {}, {}", jarFilePath, jarFile.lastModified(), this.lastModified) ;
+    	long lastModifiedJar = new File(this.jarFileName).lastModified() ;
+    	
+        log.info("JAR: {}, {}, {}", this.jarFileName, lastModifiedJar, this.lastModified) ;
 
         // Verificar si el archivo JAR ha sido actualizado
-        if (jarFile.lastModified() > this.lastModified)
+        if (lastModifiedJar > this.lastModified)
         {
             log.info("¡El JAR ha sido actualizado! Finalizando la aplicación...") ;
 
