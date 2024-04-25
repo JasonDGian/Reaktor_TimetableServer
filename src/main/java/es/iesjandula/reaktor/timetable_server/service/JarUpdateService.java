@@ -22,29 +22,29 @@ public class JarUpdateService
     public void init()
     {
         // Obtener la ruta del archivo JAR en ejecución
-        String jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        String jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath() ;
         File jarFile = new File(jarFilePath);
 
         // Obtener la fecha de modificación del archivo JAR
-        this.lastModified = jarFile.lastModified();
+        this.lastModified = jarFile.lastModified() ;
     }
 
     @Scheduled(fixedRate = 5000) // Ejecutar cada 5 segundos
     public void checkJarUpdate()
     {
         // Obtener la ruta del archivo JAR en ejecución
-        String jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-        File jarFile = new File(jarFilePath);
+        String jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath() ;
+        File jarFile = new File(jarFilePath) ;
         
-        log.info("JAR: {}, {}, {}", jarFilePath, jarFile.lastModified(), this.lastModified);
+        log.info("JAR: {}, {}, {}", jarFilePath, jarFile.lastModified(), this.lastModified) ;
 
         // Verificar si el archivo JAR ha sido actualizado
         if (jarFile.lastModified() > this.lastModified)
         {
-            log.info("¡El JAR ha sido actualizado! Finalizando la aplicación...");
+            log.info("¡El JAR ha sido actualizado! Finalizando la aplicación...") ;
 
             // Salir de la aplicación
-            System.exit(0);
+            System.exit(0) ;
         }
     }
 }
