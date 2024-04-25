@@ -23,10 +23,18 @@ public class JarUpdateService
     public void init()
     {
     	// Obtener la ruta del archivo JAR en ejecución
-        this.jarFileName = new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath()).getName() ;
+        String jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+
+        // Eliminar el sufijo "classes!" si está presente
+        if (jarFilePath.endsWith("!/BOOT-INF/classes!/")) {
+            jarFilePath = jarFilePath.replace("!/BOOT-INF/classes!/", "");
+        }
+
+        // Obtener solo el nombre del archivo JAR sin la ruta completa
+        jarFileName = new File(jarFilePath).getName();
         
         // Obtener la fecha de modificación del archivo JAR
-        this.lastModified = new File(this.jarFileName).lastModified() ;
+        lastModified = new File(jarFileName).lastModified();
     }
 
     @Scheduled(fixedRate = 5000) // Ejecutar cada 5 segundos
