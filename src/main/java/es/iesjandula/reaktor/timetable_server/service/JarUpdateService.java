@@ -1,7 +1,6 @@
 package es.iesjandula.reaktor.timetable_server.service;
 
 import java.io.File;
-import java.net.URISyntaxException;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -11,39 +10,73 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
-//@Service
-//@Configuration
-//@EnableScheduling
-//@Slf4j
+@Service
+@Configuration
+@EnableScheduling
+@Slf4j
 public class JarUpdateService
 {
-	private String jarFilePath;
-    private long lastModified;
+	/** Atributo - Ruta absoluta al JAR */
+	private String rutaAbsolutaAlJar ;
+	
+	/** Atributo - JAR valido */
+	private boolean jarValido ;
+	
+	/** Atributo - Ultima modificacion */
+    private long ultimaModificacionJar ;
 
     @PostConstruct
-    public void init() {
-//        try {
-//            // Obtener la ruta completa donde se está ejecutando el archivo JAR
-//            jarFilePath = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getAbsolutePath();
-//        } catch (URISyntaxException e) {
-//            // Manejar excepción si no se puede obtener la ruta del archivo JAR
-//            e.printStackTrace();
-//        }
-//
-//        // Obtener la fecha de modificación del archivo JAR
-//        lastModified = new File(jarFilePath).lastModified();
+    public void init()
+    {
+    	// Obtenemos el nombre del archivo JAR en ejecución
+        this.rutaAbsolutaAlJar = JarUpdateService.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+
+        // Si el JAR tiene prefijo "file:"
+        if (this.rutaAbsolutaAlJar.startsWith("file:"))
+        {
+        	// Lo eliminamos
+        	this.rutaAbsolutaAlJar = this.rutaAbsolutaAlJar.substring(5) ;
+        }
+        
+        // Si el JAR tiene sufijo después de ".jar!"
+        if (this.rutaAbsolutaAlJar.contains(".jar!"))
+        {
+        	// Lo eliminamos
+        	int lastIndexOfJar = this.rutaAbsolutaAlJar.lastIndexOf(".jar!") ;
+        	rutaAbsolutaAlJar  = this.rutaAbsolutaAlJar.substring(0, lastIndexOfJar + 4) ;
+        }
+        
+        log.info("El JAR se ubica en {}", rutaAbsolutaAlJar) ;
+        
+        File jarFile = new File(this.rutaAbsolutaAlJar);
+        
+        // Si el JAR definitivamente existe tendremos en cuenta este proceso
+        this.jarValido = jarFile.exists();
+        
+        if (this.jarValido)
+        {
+        	this.ultimaModificacionJar = jarFile.lastModified() ;
+        }
     }
 
-//    @Scheduled(fixedRate = 5000) // Ejecutar cada 5 segundos
-//    public void checkJarUpdate() {
-//        // Verificar si el archivo JAR ha sido actualizado
-//        if (new File(jarFilePath).lastModified() > lastModified) {
-//            System.out.println("¡El JAR ha sido actualizado! Finalizando la aplicación...");
-//            // Realizar cualquier limpieza o liberación de recursos necesaria antes de salir
-//            // ...
-//
-//            // Salir de la aplicación
-//            System.exit(0);
-//        }
-//    }
+    /**
+     * Ejecutar cada 5 segundos
+     */
+    @Scheduled(fixedRate = 5000)
+    public void checkJarUpdate()
+    {
+    	if (this.jarValido)
+    	{
+	    	File jarFile = new File(this.rutaAbsolutaAlJar) ;
+	        
+	    	// Verificamos si el archivo JAR ha sido actualizado
+	        if (jarFile.lastModified() > this.ultimaModificacionJar)
+	        {
+	        	log.info("¡El JAR ha sido actualizado! Finalizando la aplicación...") ;
+	
+	            // Salir de la aplicación
+	            System.exit(0) ;
+	        }
+    	}
+    }
 }
