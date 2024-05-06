@@ -9,7 +9,6 @@ spring:
       maximum-pool-size: 5
 server:
   port: 8088
-springdoc.api-docs.path: /api-docs
 logging:
     level:
         root: WARN
