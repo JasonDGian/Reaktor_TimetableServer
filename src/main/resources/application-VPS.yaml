@@ -1,7 +1,10 @@
 server:
     port: 8088
-springdoc.api-docs.path: /api-docs
+
 urlCors: http://localhost:5173
+
+springdoc.api-docs.path: /api-docs
+
 logging:
     level:
         root: INFO
