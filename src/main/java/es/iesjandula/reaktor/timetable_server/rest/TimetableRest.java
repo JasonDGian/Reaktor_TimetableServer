@@ -20,13 +20,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -74,6 +74,13 @@ import es.iesjandula.reaktor.timetable_server.models.parse.Profesor;
 import es.iesjandula.reaktor.timetable_server.models.parse.Profesores;
 import es.iesjandula.reaktor.timetable_server.models.parse.TimeSlot;
 import es.iesjandula.reaktor.timetable_server.models.parse.TramosHorarios;
+import es.iesjandula.reaktor.timetable_server.repository.IAlumnoRepository;
+import es.iesjandula.reaktor.timetable_server.repository.ICursosRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IPuntosConvivenciaALumnoCursoRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IPuntosConvivenciaRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IVisitasServicioRepository;
+import es.iesjandula.reaktor.timetable_server.utils.JPAOperations;
+import es.iesjandula.reaktor.timetable_server.utils.StudentOperation;
 import es.iesjandula.reaktor.timetable_server.utils.TimeTableUtils;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -92,6 +99,12 @@ public class TimetableRest
 	/**Clase que se encarga de las operaciones logicas del servidor */
 	private TimeTableUtils util;
 	
+	/**Clase que se encarga de gestionar las operaciones con los estudiantes */
+	private StudentOperation studentOperation;
+	
+	/**Clase que se encarga de manejar las operaciones con la base de datos */
+	private JPAOperations operations;
+	
 	/**Lista de estudiantes cargados por csv */
 	private List<Student> students;
 	
@@ -104,15 +117,36 @@ public class TimetableRest
 	/**Objeto que guarda el error actual de la pagina*/
 	private InfoError infoError;
 	
+	/**Repositorio que contiene todas las operaciones CRUD de la entidad Alumnos */
+	@Autowired
+	private IAlumnoRepository alumnoRepo;
+	
+	/**Repositorio que contiene todas las operaciones CRUD de la entidad Curso */
+	@Autowired 
+	private ICursosRepository cursoRepo;
+	
+	/**Repositorio que contiene todas las operaciones CRUD de la entidad Puntos convivencia */
+	@Autowired
+	private IPuntosConvivenciaRepository puntosRepo;
+	
+	/**Repositorio que contiene todas las operaciones CRUD de la entidad PuntosConvivenciaAlumnosCurso */
+	@Autowired
+	private IPuntosConvivenciaALumnoCursoRepository sancionRepo;
+	
+	/**Repositorio que contiene todas las operaciones CRUD de la entidad VisitasServicio */
+	@Autowired
+	private IVisitasServicioRepository visitasRepo;
+	
 	public TimetableRest()
 	{
 		this.util = new TimeTableUtils();
+		this.studentOperation = new StudentOperation();
 		this.students = new LinkedList<Student>();
 		this.logVisitas = new LinkedList<Visitas>();
 	}
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/login")
-	public ResponseEntity<?> login(@RequestParam(name="email",required = true) String email,
+	@RequestMapping("/login")
+	public ResponseEntity<?> login(@RequestParam(required = true) String email,
 			@RequestParam(name="password",required = true) String passwd
 			)
 	{
@@ -140,7 +174,7 @@ public class TimetableRest
 	 * @param xmlFile
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.POST, value = "/send/xml", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@RequestMapping( value = "/send/xml", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> sendXmlToObjects(
 			@RequestPart MultipartFile xmlFile, 
 			HttpSession session)
@@ -371,6 +405,9 @@ public class TimetableRest
 					centro.setHorarios(horarios);
 					// -------------------------------------------------------------------------------------------------------------------------------------------------
 					log.info("File :" + xmlFile.getName() + " load-Done");
+					
+					//Cargamos las operaciones con base de datos
+					this.operations = new JPAOperations(this.alumnoRepo,this.cursoRepo,this.puntosRepo,this.sancionRepo,this.visitasRepo);
 				}
 				catch (ParserConfigurationException exception)
 				{
@@ -431,7 +468,7 @@ public class TimetableRest
 	 * @param session
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/roles", produces = "application/json")
+	@RequestMapping( value = "/get/roles", produces = "application/json")
 	public ResponseEntity<?> getRoles(
 			@RequestHeader(required = true) String email, 
 			HttpSession session)
@@ -508,7 +545,7 @@ public class TimetableRest
 	 * @param session
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/teachers", produces = "application/json")
+	@RequestMapping( value = "/get/teachers", produces = "application/json")
     public ResponseEntity<?> getProfesores(HttpSession session)
     {
 		try
@@ -533,7 +570,7 @@ public class TimetableRest
 	 *
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/sortstudents", produces = "application/json")
+	@RequestMapping( value = "/get/sortstudents", produces = "application/json")
 	public ResponseEntity<?> getListStudentsAlphabetically()
 	{
 		try
@@ -998,7 +1035,7 @@ public class TimetableRest
 	 * @param archivo
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.POST, value = "/send/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@RequestMapping( value = "/send/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> sendCsvTo(
 			@RequestPart MultipartFile csvFile,
 			HttpSession session)
@@ -1111,7 +1148,7 @@ public class TimetableRest
 	 * @param session
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/courses", produces = "application/json")
+	@RequestMapping( value = "/get/courses", produces = "application/json")
 	public ResponseEntity<?> getListCourse(HttpSession session)
 	{
 		List<Course> listaCurso = new ArrayList<>();
@@ -1174,7 +1211,7 @@ public class TimetableRest
 	 * @param lastname
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/teacher/get/classroom", produces = "application/json")
+	@RequestMapping( value = "/teacher/get/classroom", produces = "application/json")
 	public ResponseEntity<?> getClassroomTeacher(
 			@RequestParam(required = true) String name,
 			@RequestParam(required = true) String lastname,
@@ -1346,7 +1383,7 @@ public class TimetableRest
 	 * @param lastname
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.POST, value = "/teacher/get/classroom/tramo", produces = "application/json", consumes = "application/json")
+	@RequestMapping( value = "/teacher/get/classroom/tramo", produces = "application/json", consumes = "application/json")
 	public ResponseEntity<?> getClassroomTeacherSchedule(
 			@RequestParam(required = true) String name,
 			@RequestParam(required = true) String lastname, 
@@ -1516,7 +1553,7 @@ public class TimetableRest
 	 * @param courseName
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/teachersubject", produces = "application/json")
+	@RequestMapping( value = "/get/teachersubject", produces = "application/json")
 	public ResponseEntity<?> getTeacherSubject(
 			@RequestParam(required = true) String courseName,
 			HttpSession session)
@@ -1724,7 +1761,7 @@ public class TimetableRest
 	 * @param session
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/classroomcourse", produces = "application/json")
+	@RequestMapping( value = "/get/classroomcourse", produces = "application/json")
 	public ResponseEntity<?> getClassroomCourse(
 			@RequestParam(required = true) String courseName, 
 			HttpSession session)
@@ -1831,7 +1868,7 @@ public class TimetableRest
 	}
 	
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/get/tramos", produces = "application/json")
+	@RequestMapping( value = "/get/tramos", produces = "application/json")
 	public ResponseEntity<?> getNumTramos()
 	{
 		try
@@ -1853,7 +1890,7 @@ public class TimetableRest
 	 *
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/hours", produces = "application/json")
+	@RequestMapping( value = "/get/hours", produces = "application/json")
 	public ResponseEntity<?> getListHours(HttpSession session)
 	{
 		try
@@ -1938,19 +1975,19 @@ public class TimetableRest
 	 * @param course
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.POST, value = "/student/visita/bathroom")
+	@RequestMapping("/student/visita/bathroom")
 	public ResponseEntity<?> postVisit(
-			@RequestParam(required = true,name = "name") String name,
+			@RequestParam(required = true) String name,
 			@RequestParam(required = true,name = "lastName") String lastname, 
-			@RequestParam(required = true,name = "course") String course,
-			HttpSession session)
+			@RequestParam(required = true) String course
+			)
 	{
 		try
 		{
 			//Buscamos el estudiante
-			Student student = this.util.findStudent(name, lastname, course, this.students);
+			Student student = this.studentOperation.findStudent(name, lastname, course, this.students);
 			//En caso de que no haya ido al baño se anota si esta en el se manda un error
-			this.logVisitas = this.util.comprobarVisita(student, this.logVisitas);
+			this.operations.comprobarVisita(student);
 			//Si no hay error devolvemos que todo ha ido bien
 			return ResponseEntity.ok().build();
 		}
@@ -1976,20 +2013,18 @@ public class TimetableRest
 	 * @param session
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.POST, value = "/student/regreso/bathroom")
+	@RequestMapping("/student/regreso/bathroom")
 	public ResponseEntity<?> postReturnBathroom(
-			@RequestParam(required = true,name = "name") String name,
+			@RequestParam(required = true) String name,
 			@RequestParam(required = true,name = "lastName") String lastname, 
-			@RequestParam(required = true,name = "course") String course,
+			@RequestParam(required = true) String course,
 			HttpSession session)
 	{
 		try
 		{
-			Student student = this.util.findStudent(name, lastname, course, this.students);
+			Student student = this.studentOperation.findStudent(name, lastname, course, this.students);
 			
-			this.logVisitas = this.util.comprobarVuelta(student, this.logVisitas);
-
-			this.students = this.util.sumarBathroom(student, this.students);
+			this.operations.comprobarVuelta(student);
 			
 			return ResponseEntity.ok().build();
 		}
@@ -2016,20 +2051,20 @@ public class TimetableRest
 	 * @param session
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/veces/visitado/studentFechas", produces = "application/json")
+	@RequestMapping( value = "/get/veces/visitado/studentFechas", produces = "application/json")
 	public ResponseEntity<?> getNumberVisitsBathroom(
-			@RequestParam(required = true,name = "name") String name,
+			@RequestParam(required = true) String name,
 			@RequestParam(required = true,name = "lastName") String lastname,
-			@RequestParam(required = true,name = "course") String course,
-			@RequestParam(required = true,name = "fechaInicio") String fechaInicio,
+			@RequestParam(required = true) String course,
+			@RequestParam(required = true) String fechaInicio,
 			@RequestParam(required = true,name = "fechaFin") String fechaEnd, HttpSession session)
 	{
 		try
 		{
 			//Obtenemos el estudiante por su nombre apellido y curso
-			Student student = this.util.findStudent(name, lastname, course, this.students);
+			Student student = this.studentOperation.findStudent(name, lastname, course, this.students);
 			
-			List<Map<String,String>> visitasAlumno = this.util.getVisitaAlumno(student, fechaInicio, fechaEnd, this.logVisitas);
+			List<Map<String,String>> visitasAlumno = this.operations.getVisitaAlumno(student, fechaInicio, fechaEnd);
 			
 			//Establecemos dos tipos de respuesta, una correcta si la lista contiene datos y un error en caso contrario
 			ResponseEntity<?> respuesta = !visitasAlumno.isEmpty() ? ResponseEntity.ok().body(visitasAlumno) 
@@ -2055,19 +2090,19 @@ public class TimetableRest
 	 * @param session
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/students/visitas/bathroom", produces = "application/json")
+	@RequestMapping( value = "/get/students/visitas/bathroom", produces = "application/json")
 	public ResponseEntity<?> getListTimesBathroom(
-			@RequestParam(required = true,name="fechaInicio") String fechaInicio,
+			@RequestParam(required = true) String fechaInicio,
 			@RequestParam(required = true,name="fechaFin") String fechaEnd,
 			HttpSession session)
 	{
 		try
 		{
-			List<Map<String,Object>> visitas = this.util.getVisitasAlumnos(fechaInicio, fechaEnd,this.logVisitas);
+			List<Map<String,Object>> visitas = this.operations.getVisitasAlumnos(fechaInicio, fechaEnd);
 			
 			//Establecemos dos tipos de respuesta, una correcta si la lista contiene datos y un error en caso contrario
 			ResponseEntity<?> respuesta = !visitas.isEmpty() ? ResponseEntity.ok().body(visitas) 
-			: ResponseEntity.status(404).body("El alumno no ha ido en el periodo "+fechaInicio+" - "+fechaEnd+" al servicio");
+			: ResponseEntity.status(404).body("No hay alumnos en el periodo "+fechaInicio+" - "+fechaEnd+" al servicio");
 			
 			//Devolvemos una de las dos respuestas
 			return respuesta;
@@ -2090,7 +2125,7 @@ public class TimetableRest
 	 * @param session
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/dias/studentBathroom", produces = "application/json")
+	@RequestMapping( value = "/get/dias/studentBathroom", produces = "application/json")
 	public ResponseEntity<?> getDayHourBathroom(
 			@RequestHeader(required = true) String name,
 			@RequestHeader(required = true) String lastname, 
@@ -2264,10 +2299,10 @@ public class TimetableRest
 	 * @param session
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/horario/teacher/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+	@RequestMapping( value = "/get/horario/teacher/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
 	public ResponseEntity<?> getSchedulePdf(
-			@RequestParam(required = true,name = "name") String name,
-			@RequestParam(required = true,name = "lastname") String lastname
+			@RequestParam(required = true) String name,
+			@RequestParam(required = true) String lastname
 			)
 	{
 		try
@@ -2488,7 +2523,7 @@ public class TimetableRest
 	 * @param session
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/grupo/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+	@RequestMapping( value = "/get/grupo/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
 	public ResponseEntity<?> getGroupSchedule(@RequestParam(required = true,name = "group") String grupo)
 	{
 		try
@@ -2703,7 +2738,7 @@ public class TimetableRest
 	 * @param session
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/teacher/Classroom", produces = "application/json")
+	@RequestMapping( value = "/get/teacher/Classroom", produces = "application/json")
 	public ResponseEntity<?> getTeacherClassroom(
 			@RequestHeader(required = true) String name,
 			@RequestHeader(required = true) String lastname,
@@ -3031,7 +3066,7 @@ public class TimetableRest
 	 *
 	 * @return ResponseEntity , File PDF
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/teachers/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+	@RequestMapping( value = "/get/teachers/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
 	public ResponseEntity<?> getTeachersSchedule()
 	{
 		try
@@ -3158,7 +3193,7 @@ public class TimetableRest
 	 *
 	 * @return ResponseEntity , File PDF
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/grupos/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+	@RequestMapping( value = "/get/grupos/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
 	public ResponseEntity<?> getGlobalSchedule()
 	{
 		try
@@ -3287,9 +3322,9 @@ public class TimetableRest
 	 */
 	// REQUEST MAPPING FOR GETTING SORTED STUDENT LIST BASED ON FIRST SURNAME AND
 	// COURSE
-	@RequestMapping(method = RequestMethod.GET, value = "/get/course/sort/students" , produces = "application/json")
+	@RequestMapping( value = "/get/course/sort/students" , produces = "application/json")
 	public ResponseEntity<?> getListAlumnoFirstSurname(
-			@RequestParam(required = true,name = "course") String course)
+			@RequestParam(required = true) String course)
 	{
 		try
 		{
@@ -3298,7 +3333,7 @@ public class TimetableRest
 				throw new HorariosError(409,"No hay alumnos cargados en el servidor");
 			}
 			
-			Student [] sortStudents = this.util.sortStudentCourse(course, this.students);
+			Student [] sortStudents = this.studentOperation.sortStudentCourse(course, this.students);
 			
 			return ResponseEntity.ok().body(sortStudents);
 		}
@@ -3319,7 +3354,7 @@ public class TimetableRest
 		}
 	}
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/get/students-course",produces = "application/json")
+	@RequestMapping( value = "/get/students-course",produces = "application/json")
 	public ResponseEntity<?> getStudentsCourse()
 	{
 		try
@@ -3368,7 +3403,7 @@ public class TimetableRest
 	 * 
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/points" , produces = "application/json")
+	@RequestMapping( value = "/get/points" , produces = "application/json")
 	public ResponseEntity<?> getListPointsCoexistence()
 	{
 		try
@@ -3412,7 +3447,7 @@ public class TimetableRest
 	 * 
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/namelastname/reflexion")
+	@RequestMapping("/get/namelastname/reflexion")
 	public ResponseEntity<?> getFirstNameSurname()
 	{
 		// -- CREATE A TEACHER OBJECT AND SET ITS ATTRIBUTES --
@@ -3465,7 +3500,7 @@ public class TimetableRest
 	 * @param lastName
 	 * @return ResponseEntity
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/location/studentTutor",produces = "application/json")
+	@RequestMapping( value = "/get/location/studentTutor",produces = "application/json")
 	public ResponseEntity<?> getLocationStudentTutor(
 			@RequestHeader(required = true) String name,
 			@RequestHeader(required = true) String lastName)
@@ -3530,7 +3565,7 @@ public class TimetableRest
 	 * @param lastName
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/get/location/studentTutor/course", produces = "application/json")
+	@RequestMapping( value = "/get/location/studentTutor/course", produces = "application/json")
 	public ResponseEntity<?> getLocationStudentTutorCourse(
 			@RequestHeader(required = true) String course,
 			@RequestHeader(required = true) String name,
@@ -3587,7 +3622,7 @@ public class TimetableRest
 		}
 	}
 	
-	@RequestMapping(method = RequestMethod.GET,value="/get/coursenames",produces = "application/json")
+	@RequestMapping(value="/get/coursenames",produces = "application/json")
 	public ResponseEntity<?> getCourseNames()
 	{
 		try
@@ -3612,13 +3647,13 @@ public class TimetableRest
 		
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "/send/csv-alumnos",consumes = "multipart/form-data")
+	@RequestMapping( value = "/send/csv-alumnos",consumes = "multipart/form-data")
 	public ResponseEntity<?> loadStudents(@RequestPart( name = "csvFile",required = true)MultipartFile csvFile)
 	{
 		try
 		{
 			byte [] content = csvFile.getBytes();
-			this.students = this.util.parseStudent(content);
+			this.students = this.studentOperation.parseStudent(content);
 			return ResponseEntity.ok().body(students);
 		}
 		catch(HorariosError exception)
@@ -3633,7 +3668,7 @@ public class TimetableRest
 		}
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "send/csv-planos",consumes = "multipart/form-data")
+	@RequestMapping( value = "send/csv-planos",consumes = "multipart/form-data")
 	public ResponseEntity<?> loadPlanos(@RequestPart( name="csvFile",required = true)MultipartFile csvFile)
 	{
 		try
@@ -3658,8 +3693,8 @@ public class TimetableRest
 		}
 	}
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/get/classroom-planos",produces = "application/json")
-	public ResponseEntity<?> getAllClassroom(@RequestParam(name = "planta",required = true)String planta)
+	@RequestMapping( value = "/get/classroom-planos",produces = "application/json")
+	public ResponseEntity<?> getAllClassroom(@RequestParam(required = true)String planta)
 	{ 
 		try
 		{
@@ -3677,20 +3712,20 @@ public class TimetableRest
 		}
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "/send/error-info",consumes = "application/json")
+	@RequestMapping( value = "/send/error-info",consumes = "application/json")
 	public ResponseEntity<?> sendErrorInfo(@RequestBody (required = false)InfoError objectError)
 	{
 		this.infoError = objectError;
 		return ResponseEntity.ok().build();
 	}
 	
-	@RequestMapping(method = RequestMethod.GET,value = "/get/error-info",produces = "application/json")
+	@RequestMapping(value = "/get/error-info",produces = "application/json")
 	public ResponseEntity<?> getInfoError()
 	{
 		return ResponseEntity.ok().body(this.infoError);
 	}
 	
-	@RequestMapping(method = RequestMethod.GET,value = "/check-data",produces = "application/json")
+	@RequestMapping(value = "/check-data",produces = "application/json")
 	public ResponseEntity<?> checkServerData()
 	{
 		Map<String,String> errorMap = new HashMap<String, String>();
@@ -3715,10 +3750,10 @@ public class TimetableRest
 		}
 	}
 	
- 	@RequestMapping(method = RequestMethod.GET, value = "/get/aula-now", produces = "application/json")
-	public ResponseEntity<?> getCurrentClassroom(@RequestParam(value = "numIntAu")String numIntAu,
-												 @RequestParam(value = "abreviatura")String abreviatura,
-												 @RequestParam(value = "nombre")String nombre)
+ 	@RequestMapping( value = "/get/aula-now", produces = "application/json")
+	public ResponseEntity<?> getCurrentClassroom(@RequestParam String numIntAu,
+												 @RequestParam String abreviatura,
+												 @RequestParam String nombre)
 	{
 		try
 		{

@@ -1,6 +1,7 @@
 package es.iesjandula.reaktor.timetable_server.utils;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -85,5 +86,163 @@ public class TimeOperations
 			}
 		}
 		return tramoActual;
+	}
+	
+	/**
+	 * Metodo que transforma la fecha en entero a una fecha en string añadiendo
+	 * 0 en la fecha en caso de que un valor del entero este comprendido entre
+	 * 1 y 9
+	 * @param dateInt
+	 * @return fecha en formato string
+	 */
+	protected String transformDate(int[]fechaInt)
+	{
+		String fechaString = "";
+		
+		if((fechaInt[0]>0 && fechaInt[0]<10) && (fechaInt[1]>0 && fechaInt[1]<10))
+		{
+			fechaString = "0"+fechaInt[0]+"/0"+fechaInt[1]+"/"+fechaInt[2];
+		}
+		else if(fechaInt[0]>0 && fechaInt[0]<10)
+		{
+			fechaString = "0"+fechaInt[0]+"/"+fechaInt[1]+"/"+fechaInt[2];
+		}
+		else if(fechaInt[1]>0 && fechaInt[1]<10)
+		{
+			fechaString = fechaInt[0]+"/0"+fechaInt[1]+"/"+fechaInt[2];
+		}
+		else
+		{
+			fechaString = fechaInt[0]+"/"+fechaInt[1]+"/"+fechaInt[2];
+		}
+		
+		return fechaString;
+	}
+	
+	/**
+	 * Metodo que transforma la hora de entero a una hora en string añadiendo
+	 * 0 en la hora en caso de que un valor del entero este comprendido entre
+	 * 0 y 9
+	 * @param hours
+	 * @param minutes
+	 * @return hora en formato string
+	 */
+	protected String transformHour(int hours,int minutes)
+	{
+		String horaString = "";
+		if(hours<10)
+		{
+			horaString = "0"+hours;
+		}
+		else
+		{
+			horaString = String.valueOf(hours);
+		}
+		
+		if(minutes<10)
+		{
+			horaString+=":0"+minutes;
+		}
+		else
+		{
+			horaString+=":"+minutes;
+		}
+		
+		return horaString;
+	}
+	
+	/**
+	 * Metodo que comprueba que dos fechas sean iguales para recoger los
+	 * datos de la fecha en la que un alumno fue al baño
+	 * @param fecha
+	 * @param fechaReal
+	 * @return true si son iguales false si no
+	 */
+	protected boolean compareDate(String fecha,Date fechaReal)
+	{
+		int [] fechaInt = {fechaReal.getDate(),fechaReal.getMonth()+1,fechaReal.getYear()+1900};
+		
+		String otherFecha = this.transformDate(fechaInt);
+		
+		return fecha.equals(otherFecha);
+	}
+	
+	/**
+	 * Metodo que suma la fecha en uno y comprueba los saltos de meses y años
+	 * @param dateInt
+	 * @return nueva fecha en array de enteros
+	 */
+	protected int [] sumarDate(int[]dateInt)
+	{
+		int [] newFecha = null;
+		
+		switch(dateInt[1])
+		{
+			case 1,3,5,7,8,10,12:
+			{
+				dateInt[0]++;
+				if(dateInt[0]>31)
+				{
+					dateInt[1]++;
+					dateInt[0] = 1;
+					if(dateInt[1]>12)
+					{
+						dateInt[2]++;
+						dateInt[1] = 1;
+					}
+				}
+				newFecha = dateInt;
+				break;
+			}
+			case 4,6,9,11:
+			{
+				dateInt[0]++;
+				if(dateInt[0]>31)
+				{
+					dateInt[1]++;
+					dateInt[0] = 1;
+				}
+				newFecha = dateInt;
+				break;
+			}
+			case 2:
+			{
+				boolean bisiesto = dateInt[2]%4==0;
+				dateInt[0]++;
+				if(bisiesto && dateInt[0]>29)
+				{
+					dateInt[1]++;
+					dateInt[0] = 1;
+				}
+				else if(dateInt[0]>28 && !bisiesto)
+				{
+					dateInt[1]++;
+					dateInt[0] = 1;
+				}
+				newFecha = dateInt;
+				break;
+			}
+		}
+		
+		return newFecha;
+	}
+	
+	/**
+	 * Metodo que parsea los minutos y las horas de entero a string
+	 * en caso de que vengan dados en numeros entre 1 y 9 se le coloca un 0 detras
+	 * por ejemplo si una hora viene en 4 se parsea a 04
+	 * @param hour
+	 * @return hora parseada
+	 */
+	protected String parseTime(int hour)
+	{
+		String newHour = ""+hour;
+		
+		if(hour>0 && hour<10)
+		{
+			newHour = "0"+hour;
+		}
+		
+		return newHour;
 	}
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,9 +38,18 @@ public class TimeTableUtils
 {
 	/**Logger de la clase */
 	private static Logger log = LogManager.getLogger();
+	
+	/**Clase que gestiona las operaciones relacionadas con la fecha y hora */
+	private TimeOperations timeOperation;
+	
+	public TimeTableUtils()
+	{
+		this.timeOperation = new TimeOperations();
+	}
 	/**
 	 * Metodo que obtiene un usuario pasandole el email y su password si encuentra 
 	 * el usuario lo devuelve en caso contrario devuelve un error
+	 * @deprecated se reemplazara por spring security en el futuro
 	 * @param email email del usuario 
 	 * @param password password del usuario
 	 * @return usuario entontrado
@@ -245,201 +255,11 @@ public class TimeTableUtils
 		return classroom;
 		
 	}
-	/**
-	 * Metodo que recibe el contenido de un fichero en bytes y lo parsea para obtener
-	 * el nombre, apellidos y curso del alumnado
-	 * @param content contenido en bytes
-	 * @return lista de alumnos parseados
-	 * @throws HorariosError
-	 */
-	public List<Student> parseStudent(byte [] content) throws HorariosError
-	{
-		List<Student> students = new LinkedList<Student>();
-		
-		String stringContent = new String(content);
-		
-		String [] split = stringContent.split("\n");
-		
-		split[0] = split[0].trim();
-		
-		if(!split[0].equals("\"Alumno/a\",\"Unidad\"") && !split[0].equals("\"Alumno/a\",\"Curso\""))
-		{
-			log.error("Los datos iniciales no son Alumno/a y Unidad o curso");
-			throw new HorariosError(406,"Los datos del csv no coinciden con lo que requiere el servidor");
-		}
-		else
-		{
-			for(int i = 1;i<split.length;i++)
-			{
-				String [] splitDatos = split[i].split(",");
-				//Operaciones con el nombre del alumno
-				splitDatos[0] = splitDatos[0].substring(1);
-				splitDatos[0] = splitDatos[0].trim();
-				//Operaciones con el apellido del alumno
-				splitDatos[1] = splitDatos[1].trim();
-				splitDatos[1] = splitDatos[1].substring(0, splitDatos[1].length()-1);
-				//Operaciones con el curso del alumno
-				splitDatos[2] = splitDatos[2].trim();
-				splitDatos[2] = splitDatos[2].substring(1, splitDatos[2].length()-1);
-				
-				students.add(new Student(splitDatos[1],splitDatos[0],splitDatos[2],0));
-			}
-		}
-		return students;
-	}
-	/**
-	 * Metodo que busca alumnos por el curso y los ordena por apellido
-	 * @param course
-	 * @param students
-	 * @return lista de alumnos ordenada
-	 * @throws HorariosError
-	 */
-	public Student [] sortStudentCourse(String course,List<Student> students) throws HorariosError
-	{
-		//Array para ordenar los alumnos
- 		Student [] sortStudent = new Student[0];
-		
- 		//Busqueda de alumnos por curso
-		for(Student student : students)
-		{
-			if(student.getCourse().equals(course))
-			{
-				sortStudent = Arrays.copyOf(sortStudent, sortStudent.length+1);
-				sortStudent[sortStudent.length-1] = student;
-			}
-		}
-		
-		//Si no existen devolvemos un error
-		if(sortStudent.length==0)
-		{
-			log.error("El curso "+course+" no se encuentra en ningun alumno");
-			throw new HorariosError(404,"El curso intreoducido no coincide con ningun alumno");
-		}
-		
-		//Si no hay error ordenamos los alumnos por apellido
-		Arrays.sort(sortStudent);
-		
-		return sortStudent;
-	}
-	
-	/**
-	 * Metodo que busca a un estudiante por su nombre,apellidos y curso
-	 * @param name
-	 * @param lastName
-	 * @param course
-	 * @param students
-	 * @return estudiante encontrado
-	 */
-	public Student findStudent (String name,String lastName,String course,List<Student> students)
-	{
-		Student student = null;
-		int index = 0;
-		boolean out = false;
-		
-		while(index<students.size() && !out)
-		{
-			Student item = students.get(index);
-			
-			if(item.getName().equals(name) && item.getLastName().equals(lastName) && item.getCourse().equals(course))
-			{
-				student = item;
-				out = true;
-			}
-			
-			index++;
-		}
-		return student;
-	}
-	/**
-	 * Metodo que registra y comprueba la ida al baño de un estudiante
-	 * @param student
-	 * @param visitas
-	 * @return visita como ida registrada
-	 * @throws HorariosError
-	 */
-	public List<Visitas> comprobarVisita(Student student,List<Visitas> visitas) throws HorariosError
-	{
-		if(visitas.isEmpty())
-		{
-			visitas.add(new Visitas(student,true,false,null));
-		}
-		else
-		{
-			int index = 0;
-			boolean out = false;
-			
-			while(index<visitas.size() && !out)
-			{
-				Visitas item = visitas.get(index);
-				
-				if(student.equals(item.getStudent()) && item.isIda() && !item.isVuelta())
-				{
-					out = true;
-				}
-				index++;
-			}
-			
-			if(out)
-			{
-				throw new HorariosError(404,"El estudiante no ha regresado del baño");
-			}
-			else
-			{
-				visitas.add(new Visitas(student,true,false,null));
-			}
-		}
-		
-		return visitas;
-	}
-	
-	/**
-	 * Metodo que registra y comprueba la vuelta del baño de un estudiante
-	 * @param student
-	 * @param visitas
-	 * @return lista de visitas actualizada con la vuelta
-	 * @throws HorariosError
-	 */
-	public List<Visitas> comprobarVuelta(Student student,List<Visitas> visitas) throws HorariosError
-	{
-		if(visitas.isEmpty())
-		{
-			throw new HorariosError(404,"No hay visitas registradas");
-		}
-		else
-		{
-			int index = 0;
-			boolean out = false;
-			
-			while(index<visitas.size() && !out)
-			{
-				Visitas item = visitas.get(index);
-				
-				if(student.equals(item.getStudent()) && item.isIda() && !item.isVuelta())
-				{
-					visitas.remove(index);
-					item.setVuelta(true);
-					int numBathroom = student.getNumBathroom();
-					numBathroom++;
-					student.setNumBathroom(numBathroom);
-					LocalDateTime date = LocalDateTime.now();
-					visitas.add(new Visitas(student,true,true,date));
-					out = true;
-				}
-				
-				index++;
-			}
-			
-			if(!out)
-			{
-				throw new HorariosError(404,"El alumno no ha ido al baño en ningun momento");
-			}
-			
-			return visitas;
-		}
-	}
 	
 	/**
 	 * Metodo que busca un estudainte y suma en uno las veces que ha ido al baño
+	 * @deprecated Actualmente se usara la base de datos para contar el numero de veces ademas
+	 * el atributo numBathtroom de student ha sido eliminado
 	 * @param student
 	 * @param students
 	 * @return
@@ -508,120 +328,7 @@ public class TimeTableUtils
 		return arraySorted;
 	}
 	
-	/**
-	 * Metodo que busca las visitas al baño de un determinado alumno usando
-	 * un periodo de fechas, los datos se devuelven en una lista de mapas de formato
-	 * String String en el que en cada item se guarda el dia y la hora en la que se fue
-	 * al baño 
-	 * @param student
-	 * @param fechaInicio
-	 * @param fechaFin
-	 * @param visitas
-	 * @return lista de mapas en formato String,String que guarda en cada item el dia y la hora en la que se fue al baño
-	 */
-	public List<Map<String,String>> getVisitaAlumno(Student student,String fechaInicio,String fechaFin,List<Visitas> visitas)
-	{
-		List<Map<String,String>> visitaAlumno = new LinkedList<Map<String,String>>();
-		
-		List<Visitas> visitasAlumno = this.findVisitasAlumno(student, visitas);
-		
-		//Separador de fecha en dia mes year
-		String[] splitFecha = fechaInicio.split("/");
-		
-		//Array de fechas en formato int
-		int[] fechaInt = {Integer.parseInt(splitFecha[0].trim()),Integer.parseInt(splitFecha[1].trim()),Integer.parseInt(splitFecha[2].trim())};
-		
-		boolean endParser = false;
-		
-		//Bucle para iterar y guardar los dias y horas en los que el alumno ha ido al baño
-		while(!endParser)
-		{
-			//Transformamos la fecha a string
-			String itemDate = this.transformDate(fechaInt);
-			
-			//Iteramos las visitas
-			for(Visitas item:visitasAlumno)
-			{
-				LocalDateTime date = item.getDate();
-				//Nos quedamos solo con las que coincida la fecha
-				if(this.compareDate(itemDate, date))
-				{
-					//Anotamos la fecha y la hora con las que ha ido al baño
-					Map<String,String> datosVisita = new HashMap<String,String>();
-					datosVisita.put("dia",itemDate);
-					datosVisita.put("hora", this.parseTime(date.getHour())+":"+this.parseTime(date.getMinute()));
-					visitaAlumno.add(datosVisita);
-				}
-			}
-			
-			//Comprobamos si la fecha iterada coincide con la fecha final si no la aumentamos
-			if(itemDate.equals(fechaFin))
-			{
-				endParser = true;
-			}
-			else
-			{
-				fechaInt = this.sumarDate(fechaInt);
-			}
-		}
- 		
-		return visitaAlumno;
-	}
  	
-	/**
-	 * Metodo que busca las visitas de varios alumnos
-	 * @param fechaInicio
-	 * @param fechaFin
-	 * @param visitas
-	 * @return
-	 */
-	public List<Map<String,Object>> getVisitasAlumnos(String fechaInicio,String fechaFin,List<Visitas> visitas)
-	{
-		List<Map<String,Object>> visitasAlumnos = new LinkedList<Map<String,Object>>();
-		
-		//Separador de fecha en dia mes year
-		String[] splitFecha = fechaInicio.split("/");
-		
-		//Array de fechas en formato int
-		int[] fechaInt = {Integer.parseInt(splitFecha[0].trim()),Integer.parseInt(splitFecha[1].trim()),Integer.parseInt(splitFecha[2].trim())};
-		
-		boolean endParser = false;
-		
-		//Bucle para iterar y guardar los dias y horas en los que el alumno ha ido al baño
-		while(!endParser)
-		{
-			//Transformamos la fecha a string
-			String itemDate = this.transformDate(fechaInt);
-			
-			//Iteramos las visitas
-			for(Visitas item:visitas)
-			{
-				LocalDateTime date = item.getDate();
-				//Nos quedamos solo con las que coincida la fecha
-				if(this.compareDate(itemDate, date))
-				{
-					//Anotamos la fecha y la hora con las que ha ido al baño
-					Map<String,Object> datosVisita = new HashMap<String,Object>();
-					datosVisita.put("alumno",item.getStudent());
-					datosVisita.put("dia", itemDate);
-					datosVisita.put("veces", item.getStudent().getNumBathroom());
-					visitasAlumnos.add(datosVisita);
-				}
-			}
-			
-			//Comprobamos si la fecha iterada coincide con la fecha final si no la aumentamos
-			if(itemDate.equals(fechaFin))
-			{
-				endParser = true;
-			}
-			else
-			{
-				fechaInt = this.sumarDate(fechaInt);
-			}
-		}
-		return visitasAlumnos;
-				
-	}
 	
 	/**
 	 * Metodo que busca las visitas al baño de un alumno en concreto
@@ -642,131 +349,6 @@ public class TimeTableUtils
 		}
 		
 		return visitasAlumno;
-	}
-	/**
-	 * Metodo que transforma la fecha en entero a una fecha en string añadiendo
-	 * 0 en la fecha en caso de que un valor del entero este comprendido entre
-	 * 1 y 9
-	 * @param dateInt
-	 * @return fecha en formato string
-	 */
-	private String transformDate(int[]fechaInt)
-	{
-		String fechaString = "";
-		
-		if((fechaInt[0]>0 && fechaInt[0]<10) && (fechaInt[1]>0 && fechaInt[1]<10))
-		{
-			fechaString = "0"+fechaInt[0]+"/0"+fechaInt[1]+"/"+fechaInt[2];
-		}
-		else if(fechaInt[0]>0 && fechaInt[0]<10)
-		{
-			fechaString = "0"+fechaInt[0]+"/"+fechaInt[1]+"/"+fechaInt[2];
-		}
-		else if(fechaInt[1]>0 && fechaInt[1]<10)
-		{
-			fechaString = fechaInt[0]+"/0"+fechaInt[1]+"/"+fechaInt[2];
-		}
-		else
-		{
-			fechaString = fechaInt[0]+"/"+fechaInt[1]+"/"+fechaInt[2];
-		}
-		
-		return fechaString;
-	}
-	
-	/**
-	 * Metodo que comprueba que dos fechas sean iguales para recoger los
-	 * datos de la fecha en la que un alumno fue al baño
-	 * @param fecha
-	 * @param fechaReal
-	 * @return true si son iguales false si no
-	 */
-	private boolean compareDate(String fecha,LocalDateTime fechaReal)
-	{
-		int [] fechaInt = {fechaReal.getDayOfMonth(),fechaReal.getMonthValue(),fechaReal.getYear()};
-		
-		String otherFecha = this.transformDate(fechaInt);
-		
-		return fecha.equals(otherFecha);
-	}
-	
-	/**
-	 * Metodo que suma la fecha en uno y comprueba los saltos de meses y años
-	 * @param dateInt
-	 * @return nueva fecha en array de enteros
-	 */
-	private int [] sumarDate(int[]dateInt)
-	{
-		int [] newFecha = null;
-		
-		switch(dateInt[1])
-		{
-			case 1,3,5,7,8,10,12:
-			{
-				dateInt[0]++;
-				if(dateInt[0]>31)
-				{
-					dateInt[1]++;
-					dateInt[0] = 1;
-					if(dateInt[1]>12)
-					{
-						dateInt[2]++;
-						dateInt[1] = 1;
-					}
-				}
-				newFecha = dateInt;
-				break;
-			}
-			case 4,6,9,11:
-			{
-				dateInt[0]++;
-				if(dateInt[0]>31)
-				{
-					dateInt[1]++;
-					dateInt[0] = 1;
-				}
-				newFecha = dateInt;
-				break;
-			}
-			case 2:
-			{
-				boolean bisiesto = dateInt[2]%4==0;
-				dateInt[0]++;
-				if(bisiesto && dateInt[0]>29)
-				{
-					dateInt[1]++;
-					dateInt[0] = 1;
-				}
-				else if(dateInt[0]>28 && !bisiesto)
-				{
-					dateInt[1]++;
-					dateInt[0] = 1;
-				}
-				newFecha = dateInt;
-				break;
-			}
-		}
-		
-		return newFecha;
-	}
-	
-	/**
-	 * Metodo que parsea los minutos y las horas de entero a string
-	 * en caso de que vengan dados en numeros entre 1 y 9 se le coloca un 0 detras
-	 * por ejemplo si una hora viene en 4 se parsea a 04
-	 * @param hour
-	 * @return hora parseada
-	 */
-	private String parseTime(int hour)
-	{
-		String newHour = ""+hour;
-		
-		if(hour>0 && hour<10)
-		{
-			newHour = "0"+hour;
-		}
-		
-		return newHour;
 	}
 	
 	/**
