@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "alumnos")
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Alumnos 
 {
 	/**Id del alumno autoincremental */
@@ -32,4 +32,17 @@ public class Alumnos
 	/**Apellidos del alumno */
 	@Column(length = 50,nullable = false)
 	private String apellidos;
+	
+	/**
+	 * Constructor que instancia un alumno por su nombre y apellidos
+	 * el id no se coloca porque se autogenera
+	 * @param nombre
+	 * @param apellidos
+	 */
+	public Alumnos(String nombre,String apellidos)
+	{
+		this.nombre = nombre;
+		this.apellidos = apellidos;
+	}
+	
 }

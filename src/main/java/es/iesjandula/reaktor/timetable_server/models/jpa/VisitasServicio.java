@@ -34,16 +34,6 @@ public class VisitasServicio
 	@MapsId("cursoId")
 	private Curso nombreCurso;
 	
-//	/**Año academico del curso */
-//	@ManyToOne
-//	//@JoinColumn(name = "anioAcademico", referencedColumnName = "cursoId")
-//	@MapsId("anioAcademicoCurso")
-//	private Curso anioAcademicoCurso;
-	
-	/**Fecha en la que el alumno ha ido al servicio*/
-	@Column(name = "fecha_ida", nullable = false)
-	private Date fechaIda;
-	
 	/**Fecha en la que el alumno ha vuelto del servicio */
 	@Column(name = "fecha_vuelta", nullable = true)
 	private Date fechaVuelta;
