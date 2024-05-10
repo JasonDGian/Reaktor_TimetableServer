@@ -284,28 +284,7 @@ public class TimeTableUtils
 		
 		return students;
 	}
-	
-	/**
-	 * Metodo que ordena todos los estudiantes por su apellido
-	 * @param students
-	 * @return lista de estudiantes ordenados
-	 * @deprecated Por ahora se esta usando el metodo {@link #ordenarLista(List)} el cual mas adelante sera el principal
-	 */
-	public Student [] ordenarStudents (List<Student> students)
-	{
-		Student [] sortStudents = new Student[0];
-		
-		for(int i=0;i<students.size();i++)
-		{
-			sortStudents = Arrays.copyOf(sortStudents, i+1);
-			sortStudents[i] = students.get(i);
-		}
-		
-		Arrays.sort(sortStudents);
-		
-		return sortStudents;
-	}
-	
+
 	/**
 	 * Metodo que ordena una lista generica pasandola a array y ordenandola desde ahi
 	 * @param <T> generico que tomara como valor la clase profesores y estudiante
@@ -328,28 +307,6 @@ public class TimeTableUtils
 		return arraySorted;
 	}
 	
- 	
-	
-	/**
-	 * Metodo que busca las visitas al baño de un alumno en concreto
-	 * @param student
-	 * @param visitas
-	 * @return visitas del alumno introducido encontradas
-	 */
-	private List<Visitas> findVisitasAlumno(Student student,List<Visitas>visitas)
-	{
-		List<Visitas> visitasAlumno = new LinkedList<Visitas>();
-		
-		for(Visitas item:visitas)
-		{
-			if(item.getStudent().equals(student))
-			{
-				visitasAlumno.add(item);
-			}
-		}
-		
-		return visitasAlumno;
-	}
 	
 	/**
 	 * Metodo que devuelve todas las aulas para la parte de planos en

@@ -16,9 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
  *
  */
 @SpringBootApplication
-//@EnableJpaRepositories
-//@EnableJpaAuditing
-//@EntityScan(basePackages = "es.iesjandula.timetable_server")
 @ComponentScan( basePackages = "es.iesjandula.reaktor.timetable_server")
 public class TimetableApplication implements CommandLineRunner
 {
