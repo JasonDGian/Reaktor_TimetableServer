@@ -1,13 +1,8 @@
 package es.iesjandula.reaktor.timetable_server;
 
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.transaction.annotation.Transactional;
 
 
 
@@ -17,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @SpringBootApplication
 @ComponentScan( basePackages = "es.iesjandula.reaktor.timetable_server")
-public class TimetableApplication implements CommandLineRunner
+public class TimetableApplication
 {
 	/**
 	 * Method main to run spring app
@@ -27,7 +22,4 @@ public class TimetableApplication implements CommandLineRunner
 	{
 		SpringApplication.run(TimetableApplication.class, args);
 	}
-
-	
-
 }
