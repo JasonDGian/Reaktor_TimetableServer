@@ -28,11 +28,6 @@ public class TimetableApplication implements CommandLineRunner
 		SpringApplication.run(TimetableApplication.class, args);
 	}
 
-	@Transactional( readOnly = false)
-	public void run(String... args) throws Exception 
-	{
-		
-		
-	}
+	
 
 }
