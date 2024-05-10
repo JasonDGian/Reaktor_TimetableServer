@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @SpringBootApplication
 @ComponentScan( basePackages = "es.iesjandula.reaktor.timetable_server")
-public class TimetableApplication implements CommandLineRunner
+public class TimetableApplication
 {
 	/**
 	 * Method main to run spring app
