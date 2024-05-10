@@ -1,7 +1,7 @@
 spring:
   jpa.hibernate.ddl-auto: create
   datasource:
-    url: jdbc:mysql://localhost:3306/timetable
+    url: jdbc:mysql://localhost:3306/reaktor_timetableserver
     username: root
     password: qP8u-Ab80S_
     hikari:
