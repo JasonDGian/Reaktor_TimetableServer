@@ -9,6 +9,10 @@ spring:
       maximum-pool-size: 5
 server:
   port: 8088
+  ssl:
+    key-store: classpath:microservices-iesjandula.duckdns.org.p12
+    key-store-password: 1133557799
+    keyStoreType: PKCS12
 logging:
     level:
         root: WARN
