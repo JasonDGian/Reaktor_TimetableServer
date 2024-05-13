@@ -17,6 +17,6 @@ loggin:
   level.org.hibernate.SQL: debug
   level: debug
 server:
-    port: 8088
+    port: 8080
 
-urlCors: http://localhost:5173
+urlCors: http://localhost:5500
