@@ -1,9 +1,9 @@
 spring:
-  jpa.hibernate.ddl-auto: create
+  jpa.hibernate.ddl-auto: validate
   datasource:
-    url: jdbc:mysql://localhost:3306/timetable
+    url: jdbc:mysql://localhost:3306/reaktor_timetableserver
     username: root
-    password: 7_ap49y4z$n
+    password: qP8u-Ab80S_
     hikari:
       connection-timeout: 60000
       maximum-pool-size: 5
