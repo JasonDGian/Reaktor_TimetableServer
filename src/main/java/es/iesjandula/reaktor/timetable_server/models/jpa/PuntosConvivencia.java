@@ -22,8 +22,8 @@ public class PuntosConvivencia
 	//GeneratedValue hace que el id vaya incrementandose uno a uno
 	//GenerationType.Identity indica que el valor sera generado por la base de datos
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column
-	private Long idPuntos;
+	@Column(name = "puntos_id")
+	private Long puntosId;
 	
 	/**Valor de los puntos que se restan/suman */
 	@Column(nullable = false)
@@ -32,4 +32,16 @@ public class PuntosConvivencia
 	/**Descripcion de la sancion/recompensa */
 	@Column(nullable = false)
 	private String descripcion;
+	
+	/**
+	 * Constructor que instancia una sancion por su valor y descripcion
+	 * el id no se coloca porque se autogenera
+	 * @param nombre
+	 * @param apellidos
+	 */
+	public PuntosConvivencia(int valor, String descripcion)
+	{
+		this.valor = valor;
+		this.descripcion = descripcion;
+	}
 }

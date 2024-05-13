@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class VisitasServicioId implements Serializable
 {
 	/**Referencia a la clave primaria id de la entidad alumno */
-	private Long idAlumno;
+	private Long alumnoId;
 	
 	/**Referencia a la clave primaria nombre de la entidad curso */
 	private CursoId cursoId;

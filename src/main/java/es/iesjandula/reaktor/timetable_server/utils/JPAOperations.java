@@ -7,10 +7,14 @@ import java.util.List;
 import java.util.Map;
 
 import es.iesjandula.reaktor.timetable_server.exceptions.HorariosError;
+import es.iesjandula.reaktor.timetable_server.models.ActitudePoints;
 import es.iesjandula.reaktor.timetable_server.models.Student;
 import es.iesjandula.reaktor.timetable_server.models.jpa.Alumnos;
 import es.iesjandula.reaktor.timetable_server.models.jpa.Curso;
 import es.iesjandula.reaktor.timetable_server.models.jpa.CursoId;
+import es.iesjandula.reaktor.timetable_server.models.jpa.PuntosConvivencia;
+import es.iesjandula.reaktor.timetable_server.models.jpa.PuntosConvivenciaAlumnoCurso;
+import es.iesjandula.reaktor.timetable_server.models.jpa.PuntosConvivenciaAlumnoCursoId;
 import es.iesjandula.reaktor.timetable_server.models.jpa.VisitasServicio;
 import es.iesjandula.reaktor.timetable_server.models.jpa.VisitasServicioId;
 import es.iesjandula.reaktor.timetable_server.repository.IAlumnoRepository;
@@ -104,79 +108,6 @@ public class JPAOperations
 			
 		}
 	}
-	/**
-	 * Metodo que comrpueba e inserta un alumno en la base de datos en caso de que este no se 
-	 * encuentre en la misma
-	 * @param student
-	 * @return el id del alumno para registrarlo en una visita
-	 */
-	private Long cargarAlumno(Student student)
-	{
-		//Obtenemos todos los alumnos de la base de datos
-		List<Alumnos> alumnos = this.alumnoRepo.findAll();
-		Alumnos alumnoDto = null;
-		//En caso de que la lista este vacia insertamos el primer alumno
-		if(alumnos.isEmpty())
-		{
-			alumnoDto = this.alumnoRepo.save( new Alumnos(student.getName(),student.getLastName()));
-		}
-		else
-		{
-			boolean insert = true;
-			int index = 0;
-			//Recorremos la lista para asegurar que el alumno no este insertado en la base de datos
-			while(index<alumnos.size() && insert)
-			{
-				Alumnos alumno = alumnos.get(index);
-				//Si esta insertado abandonamos el bucle y nos quedamos con el alumno
-				if(alumno.getNombre().equals(student.getName()) && alumno.getApellidos().equals(student.getLastName()))
-				{	
-					insert = false;
-					alumnoDto = alumno;
-				}
-				index++;
-			}
-			
-			//Si no existe en la base de datos lo insertamos
-			if(insert)
-			{
-				alumnoDto = this.alumnoRepo.save( new Alumnos(student.getName(),student.getLastName()));
-			}
-		}
-		
-		//Devolvemos su id
-		return alumnoDto.getIdAlumno();
-	}
-	
-	private CursoId cargarCurso(String curso,String cursoAcademico)
-	{
-		List<Curso> cursos = this.cursoRepo.findAll();
-		CursoId id = new CursoId(curso,cursoAcademico);
-		if(cursos.isEmpty())
-		{
-			this.cursoRepo.save(new Curso(id));
-		}
-		else
-		{
-			boolean insert = true;
-			
-			for(Curso item:cursos)
-			{
-				if(item.getCursoId().equals(id))
-				{
-					insert = false;
-				}
-			}
-			
-			if(insert)
-			{
-				this.cursoRepo.save(new Curso(id));
-			}
-		}
-		
-		return id;
-		
-	}
 	
 	/**
 	 * Metodo que registra y comprueba la vuelta del baño de un estudiante en la base de datos
@@ -203,7 +134,7 @@ public class JPAOperations
 			while(index<visitasDto.size() && !vuelta)
 			{
 				VisitasServicio visita = visitasDto.get(index);
-				if(visita.getVisitasServicioId().getIdAlumno().equals(idAlumno) 
+				if(visita.getVisitasServicioId().getAlumnoId().equals(idAlumno) 
 						&& visita.getVisitasServicioId().getCursoId().equals(cursoId) 
 						&& visita.getFechaVuelta()==null
 						)
@@ -256,7 +187,7 @@ public class JPAOperations
 		//Guardamos las visitas del alumno seleccionado
 		for(VisitasServicio visita:visitas)
 		{
-			if(visita.getVisitasServicioId().getIdAlumno().equals(idAlumno) && visita.getVisitasServicioId().getCursoId().equals(cursoId))
+			if(visita.getVisitasServicioId().getAlumnoId().equals(idAlumno) && visita.getVisitasServicioId().getCursoId().equals(cursoId))
 			{
 				visitasAlumno.add(visita);
 			}
@@ -346,7 +277,7 @@ public class JPAOperations
 				//Nos quedamos solo con las que coincida la fecha
 				if(this.timeOperation.compareDate(itemDate, date))
 				{
-					Alumnos alumno = this.alumnoRepo.getReferenceById(item.getVisitasServicioId().getIdAlumno());
+					Alumnos alumno = this.alumnoRepo.getReferenceById(item.getVisitasServicioId().getAlumnoId());
 					Date horaIda = item.getVisitasServicioId().getFechaIda();
 					Date horaVuelta = item.getFechaVuelta();
 					//Anotamos la fecha y la hora con las que ha ido al baño
@@ -372,5 +303,148 @@ public class JPAOperations
 		return visitasAlumnos;
 				
 	}
+	
+	public void ponerSancion (Student student, ActitudePoints points)
+	{
+		String cursoAcademico = student.getMatriculationYear()+"/"+(Integer.parseInt(student.getMatriculationYear())+1);
+		Long alumnoId = this.cargarAlumno(student);
+		CursoId cursoId = this.cargarCurso(student.getCourse(), cursoAcademico);
+		Long puntoId = this.cargarPuntos(points);
+		Date date = new Date();
+		PuntosConvivenciaAlumnoCursoId puntosConvivenciaId = new PuntosConvivenciaAlumnoCursoId(alumnoId,cursoId,puntoId,date);
+		this.sancionRepo.save(new PuntosConvivenciaAlumnoCurso(puntosConvivenciaId, new Alumnos(alumnoId,student.getName(),student.getLastName()),
+				new Curso(cursoId),new PuntosConvivencia(puntoId,points.getPoints(),points.getDescription()))); 
+		
+	}
+	
+	/**
+	 * Metodo que comrpueba e inserta un alumno en la base de datos en caso de que este no se 
+	 * encuentre en la misma
+	 * @param student
+	 * @return el id del alumno para registrarlo en una visita
+	 */
+	private Long cargarAlumno(Student student)
+	{
+		//Obtenemos todos los alumnos de la base de datos
+		List<Alumnos> alumnos = this.alumnoRepo.findAll();
+		Alumnos alumnoDto = null;
+		//En caso de que la lista este vacia insertamos el primer alumno
+		if(alumnos.isEmpty())
+		{
+			alumnoDto = this.alumnoRepo.save( new Alumnos(student.getName(),student.getLastName()));
+		}
+		else
+		{
+			boolean insert = true;
+			int index = 0;
+			//Recorremos la lista para asegurar que el alumno no este insertado en la base de datos
+			while(index<alumnos.size() && insert)
+			{
+				Alumnos alumno = alumnos.get(index);
+				//Si esta insertado abandonamos el bucle y nos quedamos con el alumno
+				if(alumno.getNombre().equals(student.getName()) && alumno.getApellidos().equals(student.getLastName()))
+				{	
+					insert = false;
+					alumnoDto = alumno;
+				}
+				index++;
+			}
+			
+			//Si no existe en la base de datos lo insertamos
+			if(insert)
+			{
+				alumnoDto = this.alumnoRepo.save( new Alumnos(student.getName(),student.getLastName()));
+			}
+		}
+		
+		//Devolvemos su id
+		return alumnoDto.getAlumnoId();
+	}
+	/**
+	 * Metodo que comprueba e inserta un curso en la base de datos en caso de que este no
+	 * se encuentre en la misma
+	 * @param curso
+	 * @param cursoAcademico
+	 * @return el id del alumno para registrarlo en una visita
+	 */
+	private CursoId cargarCurso(String curso,String cursoAcademico)
+	{
+		//Obtenemos todos los cursos de la base de datos
+		List<Curso> cursos = this.cursoRepo.findAll();
+		CursoId id = new CursoId(curso,cursoAcademico);
+		//En caso de que la lista este vacia insertamos el primer curso
+		if(cursos.isEmpty())
+		{
+			this.cursoRepo.save(new Curso(id));
+		}
+		else
+		{
+			boolean insert = true;
+			int index = 0;
+			//Recorremos la lista para asegurar que el curso no este insertado en la base de datos
+			while(index<cursos.size() && insert)
+			{
+				Curso item = cursos.get(index);
+				//Si esta insertado abandonamos el bucle y nos quedamos con el curso
+				if(item.getCursoId().equals(id))
+				{
+					insert = false;
+				}
+				index++;
+			}
+			
+			//Si no existe en la base de datos lo insertamos
+			if(insert)
+			{
+				this.cursoRepo.save(new Curso(id));
+			}
+		}
+		//Devolvemos su id
+		return id;	
+	}
+	
+	/**
+	 * Metodo que comprueba e inserta una sancion en la base de datos en caso de que este no
+	 * se encuentre en la misma
+	 * @param points
+	 * @return el id de la sancion
+	 */
+	private Long cargarPuntos(ActitudePoints points)
+	{
+		//Obtenemos todas las sanciones de la base de datos
+		List<PuntosConvivencia> puntos = this.puntosRepo.findAll();
+		PuntosConvivencia puntosDto = null;
+		//En caso de que la lista este vacia insertamos la primera sancion
+		if(puntos.isEmpty())
+		{
+			puntosDto = this.puntosRepo.save(new PuntosConvivencia(points.getPoints(), points.getDescription()));
+		}
+		else
+		{
+			int index = 0;
+			boolean insert = true;
+			//Recorremos la lista para asegurar que el curso no este insertado en la base de datos
+			while(index<puntos.size() && insert)
+			{
+				PuntosConvivencia item = puntos.get(index);
+				//Si esta insertado abandonamos el bucle y nos quedamos con la sancion
+				if(item.getValor()==points.getPoints() && item.getDescripcion().equals(points.getDescription()))
+				{
+					insert = false;
+					puntosDto = item;
+				}
+				
+				index++;
+			}
+			//Si no existe en la base de datos lo insertamos
+			if(insert)
+			{
+				puntosDto = this.puntosRepo.save(new PuntosConvivencia(points.getPoints(), points.getDescription()));
+			}
+		}
+		//Devolvemos su id
+		return puntosDto.getPuntosId();
+	}
+	
 	
 }

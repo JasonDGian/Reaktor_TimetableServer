@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -3796,4 +3797,41 @@ public class TimetableRest
 			return ResponseEntity.status(500).body("Error de servidor "+exception.getStackTrace());
 		}
 	}
+ 	
+ 	@RequestMapping(method = RequestMethod.POST, value = "/send/sancion", consumes = "application/json")
+ 	public ResponseEntity<?> sendSancion(@RequestBody(required = true) Student student,
+ 										 @RequestParam(name = "value",required = true) Integer value,
+ 										 @RequestParam(name = "description",required = true) String description)
+ 	{
+ 		try
+ 		{
+ 			//Busqueda del estudiante
+ 			this.util.findStudent(student, students);
+ 			
+ 			ActitudePoints points = new ActitudePoints(value, description);
+ 			
+ 			List<ActitudePoints> puntos = this.util.loadPoints();
+ 			
+ 			//Busqueda de puntos
+ 			if(!puntos.contains(points))
+ 			{
+ 				throw new HorariosError(404,"Los puntos proporcionados no se encuentran en los datos generales");
+ 			}
+ 			
+ 			//Guardamos la sancion en la base de datos
+ 			this.operations.ponerSancion(student, points);
+ 			
+ 			return ResponseEntity.ok().build();
+ 		}
+ 		catch(HorariosError exception)
+ 		{
+ 			log.error("Los datos proporcionados no son correctos",exception);
+ 			return ResponseEntity.status(exception.getCode()).body(exception.toMap());
+ 		}
+ 		catch(Exception exception)
+ 		{
+ 			log.error("Error de servidor",exception);
+ 			return ResponseEntity.status(500).body("Error de servidor "+exception.getStackTrace());
+ 		}
+ 	}
  }

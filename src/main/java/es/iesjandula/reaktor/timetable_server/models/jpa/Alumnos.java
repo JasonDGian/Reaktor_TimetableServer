@@ -22,8 +22,8 @@ public class Alumnos
 	//GeneratedValue hace que el id vaya incrementandose uno a uno
 	//GenerationType.Identity indica que el valor sera generado por la base de datos
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column
-	private Long idAlumno;
+	@Column(name = "alumno_id")
+	private Long alumnoId;
 	
 	/**Nombre del alumno */
 	@Column(length = 30,nullable = false)

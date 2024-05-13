@@ -1,12 +1,7 @@
 package es.iesjandula.reaktor.timetable_server.models.jpa;
 
-import java.util.Date;
-
-import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
@@ -27,27 +22,17 @@ public class PuntosConvivenciaAlumnoCurso
 	
 	/**Id del alumno que es sancionado/recompensado */
 	@ManyToOne
-	@MapsId("idAlumno")
-	private Alumnos idAlumno;
+	@MapsId("alumnoId")
+	private Alumnos alumnoId;
 	
 	/**Nombre del curso que pertence el alumno*/
 	@ManyToOne
 	@MapsId("cursoId")
-	private Curso nombreCurso;
-	
-//	/**Año academico del curso */
-//	@ManyToOne
-//	@JoinColumn(name = "anioAcademico", referencedColumnName = "cursoId")
-//	@MapsId("anioAcademicoCurso")
-//	private Curso anioAcademicoCurso;
-//	
+	private Curso cursoId;
 	
 	/**Id de los puntos y la sancion/recompensa que el alumno recibe */
 	@ManyToOne
-	@MapsId("idPuntosConvivencia")
-	private PuntosConvivencia idPuntosConvivencia;
+	@MapsId("puntosId")
+	private PuntosConvivencia puntosId;
 	
-	/**Fecha en la que se impone la sancion */
-	@Column
-	private Date fechaSancion;
 }

@@ -22,17 +22,17 @@ public class VisitasServicio
 {
 	/**Id emmebido que referencia a las tablas alumnos y curso */
 	@EmbeddedId
-	private VisitasServicioId VisitasServicioId;
+	private VisitasServicioId visitasServicioId;
 	
 	/**Id del alumno que es sancionado/recompensado */
 	@ManyToOne
-	@MapsId("idAlumno")
-	private Alumnos idAlumno;
+	@MapsId("alumnoId")
+	private Alumnos alumnoId;
 	
 	/**Nombre del curso que pertence el alumno*/
 	@ManyToOne
 	@MapsId("cursoId")
-	private Curso nombreCurso;
+	private Curso cursoId;
 	
 	/**Fecha en la que el alumno ha vuelto del servicio */
 	@Column(name = "fecha_vuelta", nullable = true)
