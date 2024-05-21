@@ -626,7 +626,6 @@ public class TimeTableUtils
 	/**
 	 * Metodo que devuelve una lista de alumnis en funcion del grupo seleccionado
 	 * por las aulas de los planos
-	 * @deprecated Los cursos de los alumnos son incorrectos se mantendra deprecado hasta la actualizacion de los mismos 
 	 * @param grupo
 	 * @param alumnos
 	 * @return lista de alumnos por grupo
@@ -634,24 +633,57 @@ public class TimeTableUtils
 	 */
 	public List<Student> getAlumnosAulaNow(Grupo grupo, List<Student> alumnos) throws HorariosError
 	{
-		//Obtenemos el grado del curso en caso de que este vacio lanzamos un error
-		String grade = getGroupGrade(grupo.getNombre());
+		List<Student> alumnosAula = new LinkedList<Student>();
+		//Para el caso de bachillerato que se forma de BHCS (Bachillerato ciencias sociales) o
+		//BCT (Bachillerato Ciencias Tecnologicas) o BC (Bachillerato) se aplicara un filtro especial
+		//Para recoger solo esos alumnos
+		String alumnosBach = this.getAlumnosBach(grupo.getNombre());
 		
-		if(grade.isEmpty())
+		if(alumnosBach.isEmpty())
 		{
-			throw new HorariosError(400,"El curso seleccionado "+grupo.getNombre()+" no coincide con ningun curso de los alumnos");
+			//Obtenemos el grado del curso en caso de que este vacio lanzamos un error
+			String grade = getGroupGrade(grupo.getNombre());
+			
+			if(grade.isEmpty())
+			{
+				throw new HorariosError(400,"El curso seleccionado "+grupo.getNombre()+" no coincide con ningun curso de los alumnos");
+			}
+			
+			/* Esta variable sirve para convertir el curso de un grupo al curso de los
+			 * alumnos ya que estos son distintos por ejemplo en bachillerato el grupo
+			 * de los datos del centro es 1º BACH A y en los alumnos 1 BHCS A
+			 */ 
+			String grupoAlumno = this.transformGroup(grupo.getNombre());
+			
+			String letraGrupo = this.getGroupLetter(grupo.getNombre());
+			
+			String completeGrade = grade+" "+grupoAlumno+" "+letraGrupo;
+			
+			for(Student alumno:alumnos)
+			{
+				if(completeGrade.equals(alumno.getCourse()))
+				{
+					alumnosAula.add(alumno);
+				}
+			}
+		}
+		else
+		{
+			for(Student alumno:alumnos)
+			{
+				if(alumnosBach.equals(alumno.getCourse()))
+				{
+					alumnosAula.add(alumno);
+				}
+			}
 		}
 		
-		/* Esta variable sirve para convertir el curso de un grupo al curso de los
-		 * alumnos ya que estos son distintos por ejemplo en bachillerato el grupo
-		 * de los datos del centro es 1º BACH A y en los alumnos 1 BHCS A
-		 */ 
-		String grupoAlumno = this.transformGroup(grupo.getNombre());
+		if(alumnosAula.isEmpty())
+		{
+			throw new HorariosError(404,"Los cursos de los datos generales no coinciden con los de los alumnos");
+		}
 		
-		String letraGrupo = this.getGroupLetter(grupo.getNombre());
-		
-		return null;
-		
+		return alumnosAula;
 	}
 	
 	/**
@@ -682,11 +714,6 @@ public class TimeTableUtils
 	private String transformGroup(String group)
 	{
 		String grupoAlumno = "";
-		//Nombre de bachillerato en alumnos
-		if(group.contains("BACH"))
-		{
-			grupoAlumno = "BHCS";
-		}
 		//Nombre de guia natural en alumnos
 		if(group.contains("GUIA MEDIO NATURAL") || group.contains("CFGM GMNTL"))
 		{
@@ -707,13 +734,52 @@ public class TimeTableUtils
 		{
 			grupoAlumno = "DAM";
 		}
+		//Nombre de ESO en alumnos
+		if(group.contains("ESO"))
+		{
+			grupoAlumno = "ESO";
+		}
 		
 		return grupoAlumno;
 	}
 	
+	private String getAlumnosBach(String group)
+	{
+		String bach = "";
+		String letraGrupo = this.getGroupLetter(group);
+		
+		if(group.contains("1") && group.contains("BACH") && letraGrupo.equals("A"))
+		{
+			bach = "1 BHCS A";
+		}
+		else if(group.contains("1") && group.contains("BACH") && letraGrupo.equals("B"))
+		{
+			bach = "1 BHCS B";
+		}
+		else if(group.contains("1") && group.contains("BACH") && letraGrupo.equals("C"))
+		{
+			bach = "1 BCT C";
+		}
+		else if(group.contains("2") && group.contains("BACH") && letraGrupo.equals("A"))
+		{
+			bach = "2 BC A";
+		}
+		else if(group.contains("2") && group.contains("BACH") && letraGrupo.equals("B"))
+		{
+			bach = "2 BHCS B";
+		}
+		else if(group.contains("2") && group.contains("BACH") && letraGrupo.equals("C"))
+		{
+			bach = "2 BHCS C";
+		}
+		
+		return bach;
+		
+	}
+	
 	private String getGroupLetter(String group)
 	{
-		String letraGrupo = String.valueOf(group.charAt(group.length()));
+		String letraGrupo = String.valueOf(group.charAt(group.length()-1));
 		
 		if(!letraGrupo.equals("A") && !letraGrupo.equals("B") && !letraGrupo.equals("C") && !letraGrupo.equals("D"))
 		{
