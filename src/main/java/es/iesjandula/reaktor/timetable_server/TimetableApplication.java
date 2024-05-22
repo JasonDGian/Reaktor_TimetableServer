@@ -8,7 +8,6 @@ import org.springframework.context.annotation.ComponentScan;
 
 /**
  * @author David Martinez
- *
  */
 @SpringBootApplication
 @ComponentScan( basePackages = "es.iesjandula.reaktor.timetable_server")
