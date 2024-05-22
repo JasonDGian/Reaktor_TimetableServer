@@ -26,14 +26,14 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'adopt'
-        java-version: '11'
+        java-version: '17'
 
     - name: Set up JDK on Windows
       if: runner.os == 'Windows'
       uses: actions/setup-java@v3
       with:
         distribution: 'adopt'
-        java-version: '11'
+        java-version: '17'
 
     - name: Build with Maven
       run: mvn clean install
