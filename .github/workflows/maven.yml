@@ -19,6 +19,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    # Detect OS and set up JDK accordingly
+    - name: Set up JDK on Linux
+      if: runner.os == 'Linux'
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
+    - name: Set up JDK on Windows
+      if: runner.os == 'Windows'
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
     - name: Build with Maven
       run: mvn clean install
 
