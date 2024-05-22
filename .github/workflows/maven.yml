@@ -22,22 +22,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    # Detect OS and set up JDK accordingly
-    - name: Set up JDK on Linux
-      if: matrix.os == 'Linux'
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'adopt'
-        java-version: '17'
-
-    - name: Set up JDK on Windows
-      if: matrix.os == 'Windows'
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'adopt'
-        java-version: '17'
-
     - name: Build with Maven
       run: mvn clean install
 
