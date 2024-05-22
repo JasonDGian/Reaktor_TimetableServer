@@ -184,10 +184,12 @@ public class JPAOperations
 		Long idAlumno = this.cargarAlumno(student);
 		CursoId cursoId = this.cargarCurso(student.getCourse(), cursoAcademico);
 		
-		//Guardamos las visitas del alumno seleccionado
+		//Guardamos las visitas del alumno seleccionado y nos saltamos aquellas que tienen
+		//la fecha de vuelta a null
 		for(VisitasServicio visita:visitas)
 		{
-			if(visita.getVisitasServicioId().getAlumnoId().equals(idAlumno) && visita.getVisitasServicioId().getCursoId().equals(cursoId))
+			if(visita.getVisitasServicioId().getAlumnoId().equals(idAlumno) && visita.getVisitasServicioId().getCursoId().equals(cursoId)
+					&& visita.getFechaVuelta()!=null)
 			{
 				visitasAlumno.add(visita);
 			}
@@ -273,6 +275,11 @@ public class JPAOperations
 			//Iteramos las visitas
 			for(VisitasServicio item:visitas)
 			{
+				//Saltamos las visitas que su fecha de vuelta es nula
+				if(item.getFechaVuelta()==null)
+				{
+					continue;
+				}
 				Date date = item.getVisitasServicioId().getFechaIda();
 				//Nos quedamos solo con las que coincida la fecha
 				if(this.timeOperation.compareDate(itemDate, date))
@@ -304,6 +311,41 @@ public class JPAOperations
 				
 	}
 	
+	/**
+	 * Metodo que obtiene el numero de visitas al servicio por parte de
+	 * un estudiante
+	 * @param student
+	 * @return numero de visitas realizadas, en caso de que 
+	 * no haya ninguna se devuelve 0 por defecto
+	 */
+	public int obtenerNumeroVecesServicio(Student student)
+	{
+		int numeroVisitas = 0;
+		
+		String cursoAcademico = student.getMatriculationYear()+"/"+(Integer.parseInt(student.getMatriculationYear())+1);
+		Long alumnoId = this.cargarAlumno(student);
+		CursoId cursoId = this.cargarCurso(student.getCourse(), cursoAcademico);
+		
+		List<VisitasServicio> visitas = this.visitasRepo.findAll();
+		
+		for(VisitasServicio visita:visitas)
+		{
+			if(visita.getVisitasServicioId().getAlumnoId().equals(alumnoId) && visita.getVisitasServicioId().getCursoId().equals(cursoId)
+					&& visita.getFechaVuelta()!=null)
+			{
+				numeroVisitas++;
+			}
+		}
+		
+		return numeroVisitas;
+		
+	}
+	
+	/**
+	 * Metodo que registra una sancion o recompensa en la base de datos
+	 * @param student
+	 * @param points
+	 */
 	public void ponerSancion (Student student, ActitudePoints points)
 	{
 		String cursoAcademico = student.getMatriculationYear()+"/"+(Integer.parseInt(student.getMatriculationYear())+1);
