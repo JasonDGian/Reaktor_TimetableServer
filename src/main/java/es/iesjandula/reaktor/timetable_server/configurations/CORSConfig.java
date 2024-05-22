@@ -14,6 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 public class CORSConfig implements WebMvcConfigurer
 {
+	/** URL permitida de CORS */
 	@Value("${urlCors}")
 	private String urlCors;
 	
