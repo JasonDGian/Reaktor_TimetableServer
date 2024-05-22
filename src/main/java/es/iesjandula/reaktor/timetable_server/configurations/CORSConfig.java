@@ -18,11 +18,15 @@ public class CORSConfig implements WebMvcConfigurer
 	@Value("${urlCors}")
 	private String urlCors;
 	
+	/**
+	 * @param registry información del Cors Registry
+	 */
 	@Override
 	public void addCorsMappings(CorsRegistry registry)
 	{
-		registry.addMapping("/**").allowedOrigins(urlCors)
-		.allowedMethods("GET","POST","PUT","DELETE")
-		.allowedHeaders("*");
+		registry.addMapping("/**")
+				.allowedOrigins(urlCors)
+				.allowedMethods("GET","POST","PUT","DELETE")
+				.allowedHeaders("*");
 	}
 }
