@@ -29,89 +29,77 @@ public class StudentOperation
 	{
 		List<Student> students = new LinkedList<Student>();
 		
-		String stringContent = new String(content,Charset.forName("UTF-8"));
+		String stringContent = new String(content,Charset.forName("ISO-8859-1"));
 		
 		String [] split = stringContent.split("\n");
-		
-		split[0] = split[0].trim();
-		
-		if(!split[0].equals("\"Alumno/a\",\"Unidad\",\"Año de la matrícula\",\"Primer apellido Primer tutor\","
-				+ "\"Segundo apellido Primer tutor\",\"Nombre Primer tutor\",\"Teléfono Primer tutor\","
-				+ "\"Correo Electrónico Primer tutor\""))
+
+		for(int i = 1;i<split.length;i++)
 		{
-			log.error("Los datos iniciales no son Alumno/a,Unidad,Año de la matrícula,Primer apellido Primer tutor,Segundo apellido Primer tutor,Nombre primer tutor, Teléfono Primer tutor,Correo Electrónico Primer tutor");
-			throw new HorariosError(406,"Los datos del csv no coinciden con lo que requiere el servidor");
-		}
-		else
-		{
-			for(int i = 1;i<split.length;i++)
+			String [] splitDatos = split[i].split(",");
+			//Operaciones con el nombre del alumno
+			splitDatos[0] = splitDatos[0].substring(1);
+			splitDatos[0] = splitDatos[0].trim();
+			//Operaciones con el apellido del alumno
+			splitDatos[1] = splitDatos[1].trim();
+			splitDatos[1] = splitDatos[1].substring(0, splitDatos[1].length()-1);
+			//Operaciones con el curso del alumno
+			splitDatos[2] = splitDatos[2].trim();
+			splitDatos[2] = splitDatos[2].substring(1, splitDatos[2].length()-1);
+			//Operaciones con el curso academico 
+			splitDatos[3] = splitDatos[3].trim();
+			splitDatos[3] = splitDatos[3].substring(1, splitDatos[3].length()-1);
+			//Operaciones con el primer apellido del tutor en caso de que este vacio lo establecemos a nulo
+			if(!splitDatos[4].isEmpty() && !splitDatos[4].equals("\"\""))
 			{
-				String [] splitDatos = split[i].split(",");
-				//Operaciones con el nombre del alumno
-				splitDatos[0] = splitDatos[0].substring(1);
-				splitDatos[0] = splitDatos[0].trim();
-				//Operaciones con el apellido del alumno
-				splitDatos[1] = splitDatos[1].trim();
-				splitDatos[1] = splitDatos[1].substring(0, splitDatos[1].length()-1);
-				//Operaciones con el curso del alumno
-				splitDatos[2] = splitDatos[2].trim();
-				splitDatos[2] = splitDatos[2].substring(1, splitDatos[2].length()-1);
-				//Operaciones con el curso academico 
-				splitDatos[3] = splitDatos[3].trim();
-				splitDatos[3] = splitDatos[3].substring(1, splitDatos[3].length()-1);
-				//Operaciones con el primer apellido del tutor en caso de que este vacio lo establecemos a nulo
-				if(!splitDatos[4].isEmpty() && !splitDatos[4].equals("\"\""))
-				{
-					splitDatos[4] = splitDatos[4].trim();
-					splitDatos[4] = splitDatos[4].substring(1, splitDatos[4].length()-1);
-				}
-				else
-				{
-					splitDatos[4] = null;
-				}
-				//Operaciones con el segundo apellido primer del tutor en caso de que este vacio lo establecemos a nulo
-				if(!splitDatos[5].isEmpty() && !splitDatos[5].equals("\"\""))
-				{
-					splitDatos[5] = splitDatos[5].trim();
-					splitDatos[5] = splitDatos[5].substring(1, splitDatos[5].length()-1);
-				}
-				else
-				{
-					splitDatos[5] = null;
-				}
-				//Operaciones con el nombre del primer tutor en caso de que este vacio lo establecemos a nulo
-				if(!splitDatos[6].isEmpty() && !splitDatos[6].equals("\"\""))
-				{
-					splitDatos[6] = splitDatos[6].trim();
-					splitDatos[6] = splitDatos[6].substring(1, splitDatos[6].length()-1);
-				}
-				else
-				{
-					splitDatos[6] = null;
-				}
-				//Operaciones con el telefono del primer tutor en caso de que este vacio lo establecemos a nulo
-				if(!splitDatos[7].isEmpty() && !splitDatos[7].equals("\"\""))
-				{
-					splitDatos[7] = splitDatos[7].trim();
-					splitDatos[7] = splitDatos[7].substring(1, splitDatos[7].length()-1);
-				}
-				else
-				{
-					splitDatos[7] = null;
-				}
-				//Operaciones con el correo electronico del primer tutor
-				if(!splitDatos[8].isEmpty() && !splitDatos[8].equals("\"\"\r"))
-				{
-					splitDatos[8] = splitDatos[8].trim();
-					splitDatos[8] = splitDatos[8].substring(1, splitDatos[8].length()-1);
-				}
-				else
-				{
-					splitDatos[8] = null;
-				}
-				
-				students.add(new Student(splitDatos[1],splitDatos[0],splitDatos[2],splitDatos[3],splitDatos[4],splitDatos[5],splitDatos[6],splitDatos[7],splitDatos[8]));
+				splitDatos[4] = splitDatos[4].trim();
+				splitDatos[4] = splitDatos[4].substring(1, splitDatos[4].length()-1);
 			}
+			else
+			{
+				splitDatos[4] = null;
+			}
+			//Operaciones con el segundo apellido primer del tutor en caso de que este vacio lo establecemos a nulo
+			if(!splitDatos[5].isEmpty() && !splitDatos[5].equals("\"\""))
+			{
+				splitDatos[5] = splitDatos[5].trim();
+				splitDatos[5] = splitDatos[5].substring(1, splitDatos[5].length()-1);
+			}
+			else
+			{
+				splitDatos[5] = null;
+			}
+			//Operaciones con el nombre del primer tutor en caso de que este vacio lo establecemos a nulo
+			if(!splitDatos[6].isEmpty() && !splitDatos[6].equals("\"\""))
+			{
+				splitDatos[6] = splitDatos[6].trim();
+				splitDatos[6] = splitDatos[6].substring(1, splitDatos[6].length()-1);
+			}
+			else
+			{
+				splitDatos[6] = null;
+			}
+			//Operaciones con el telefono del primer tutor en caso de que este vacio lo establecemos a nulo
+			if(!splitDatos[7].isEmpty() && !splitDatos[7].equals("\"\""))
+			{
+				splitDatos[7] = splitDatos[7].trim();
+				splitDatos[7] = splitDatos[7].substring(1, splitDatos[7].length()-1);
+			}
+			else
+			{
+				splitDatos[7] = null;
+			}
+			//Operaciones con el correo electronico del primer tutor
+			if(!splitDatos[8].isEmpty() && !splitDatos[8].equals("\"\"\r"))
+			{
+				splitDatos[8] = splitDatos[8].trim();
+				splitDatos[8] = splitDatos[8].substring(1, splitDatos[8].length()-1);
+			}
+			else
+			{
+				splitDatos[8] = null;
+			}
+			
+			students.add(new Student(splitDatos[1],splitDatos[0],splitDatos[2],splitDatos[3],splitDatos[4],splitDatos[5],splitDatos[6],splitDatos[7],splitDatos[8]));
 		}
 		return students;
 	}
