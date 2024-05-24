@@ -27,6 +27,7 @@ public class StudentOperation
 	 */
 	public List<Student> parseStudent(byte [] content) throws HorariosError
 	{
+		
 		List<Student> students = new LinkedList<Student>();
 		
 		String stringContent = new String(content,Charset.forName("ISO-8859-1"));
