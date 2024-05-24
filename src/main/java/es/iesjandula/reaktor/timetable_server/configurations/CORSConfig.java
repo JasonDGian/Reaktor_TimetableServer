@@ -16,7 +16,7 @@ public class CORSConfig implements WebMvcConfigurer
 {
 	/** URL permitida de CORS */
 	@Value("${urlCors}")
-	private String urlCors;
+	private String[] urlCors;
 	
 	/**
 	 * @param registry información del Cors Registry
