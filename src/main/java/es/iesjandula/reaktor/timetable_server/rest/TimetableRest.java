@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -50,7 +49,6 @@ import es.iesjandula.reaktor.timetable_server.models.Rol;
 import es.iesjandula.reaktor.timetable_server.models.Student;
 import es.iesjandula.reaktor.timetable_server.models.Teacher;
 import es.iesjandula.reaktor.timetable_server.models.TeacherMoment;
-import es.iesjandula.reaktor.timetable_server.models.Visitas;
 import es.iesjandula.reaktor.timetable_server.models.parse.Actividad;
 import es.iesjandula.reaktor.timetable_server.models.parse.Asignatura;
 import es.iesjandula.reaktor.timetable_server.models.parse.Asignaturas;
@@ -87,7 +85,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * @author David Martinez
+ * @author David Martinez, Pablo Ruiz Canovas
  */
 @RestController
 @RequestMapping("/horarios")
@@ -108,9 +106,6 @@ public class TimetableRest
 	
 	/**Lista de estudiantes cargados por csv */
 	private List<Student> students;
-	
-	/**Lista de visitas al baño por los estudiantes */
-	private List<Visitas> logVisitas;
 	
 	/**Lista de los planos de las aulas */
 	private List<AulaPlano> aulas;
@@ -143,32 +138,8 @@ public class TimetableRest
 		this.util = new TimeTableUtils();
 		this.studentOperation = new StudentOperation();
 		this.students = new LinkedList<Student>();
-		this.logVisitas = new LinkedList<Visitas>();
 	}
 	
-	@RequestMapping("/login")
-	public ResponseEntity<?> login(@RequestParam(required = true) String email,
-			@RequestParam(name="password",required = true) String passwd
-			)
-	{
-		try
-		{
-			this.util.getUser(email, passwd);
-			
-			return ResponseEntity.ok().body("Usuario encontrado");
-		}
-		catch(HorariosError exception)
-		{
-			log.error("Usuario no encontrado", exception);
-			return ResponseEntity.status(404).body(exception.toMap());
-		}
-		catch(Exception exception)
-		{
-			log.error("Error de servidor", exception);
-			HorariosError error = new HorariosError(500,"Error de servidor",exception);
-			return ResponseEntity.status(500).body(error.toMap());
-		}
-	}
 	/**
 	 * Method sendXmlToObjects
 	 *
@@ -462,85 +433,6 @@ public class TimetableRest
 		}
 	}
 
-	/**
-	 * Method getRoles , returns ResponseEntity with the teacher roles
-	 *
-	 * @param email
-	 * @param session
-	 * @return ResponseEntity
-	 */
-	@RequestMapping( value = "/get/roles", produces = "application/json")
-	public ResponseEntity<?> getRoles(
-			@RequestHeader(required = true) String email, 
-			HttpSession session)
-	{
-		try
-		{
-			List<Teacher> teacherList = new ArrayList<>();
-			// --- VALIDATING CSV INFO (IN SESSION)---
-			if ((session.getAttribute("csvInfo") != null) && (session.getAttribute("csvInfo") instanceof List))
-			{
-				// -- GETTIN TEACHER LIST FROM CSV INFO --- (SESSION)
-				teacherList = (List<Teacher>) session.getAttribute("csvInfo");
-
-				// -- FUSION OF XML TEAHCERS WITH CSV TEACHERS ---
-				if ((session.getAttribute("storedCentro") != null)
-						&& (session.getAttribute("storedCentro") instanceof Centro))
-				{
-					Centro centro = (Centro) session.getAttribute("storedCentro");
-					for (Profesor prof : centro.getDatos().getProfesores().getProfesor())
-					{
-						Teacher newTeacher = new Teacher();
-						newTeacher.setName(prof.getNombre().trim());
-						newTeacher
-								.setLastName(prof.getPrimerApellido().trim() + " " + prof.getSegundoApellido().trim());
-						newTeacher.setEmail(prof.getAbreviatura() + "exampleXML@xml.com");
-						newTeacher.setTelephoneNumber(String.valueOf((Math.random() * 10000000) + 1));
-						newTeacher.setRoles(List.of(Rol.administrador, Rol.conserje, Rol.docente));
-
-						teacherList.add(newTeacher);
-					}
-				}
-				else
-				{
-					log.error("ERROR ON LOAD TEACHERS FROM XML");
-				}
-
-				if (!email.trim().isEmpty())
-				{
-					// --- GETTING THE TEACHER WITH THE SPECIFIC EMAIL ---
-					for (Teacher teacher : teacherList)
-					{
-						if (teacher.getEmail().equals(email))
-						{
-							return ResponseEntity.ok().body(teacher);
-						}
-					}
-				}
-				else
-				{
-					// --- EMAIL NOT VALID ---
-					String error = "Email is not valid";
-					HorariosError horariosError = new HorariosError(400, error, null);
-					log.error(error, horariosError);
-					return ResponseEntity.status(400).body(horariosError);
-				}
-			}
-
-			String error = "CSV data is not loadaed Or not found for this email";
-			HorariosError horariosError = new HorariosError(400, error, null);
-			log.error(error, horariosError);
-			return ResponseEntity.status(400).body(horariosError);
-		}
-		catch (Exception exception)
-		{
-			// -- CATCH ANY ERROR ---
-			String error = "Server Error";
-			HorariosError horariosError = new HorariosError(500, error, exception);
-			log.error(error, exception);
-			return ResponseEntity.status(500).body(horariosError);
-		}
-	}
 	/**
 	 * 
 	 * @param session
@@ -1028,119 +920,6 @@ public class TimetableRest
 			gruposActividad.setGrupo5(node.getTextContent());
 		}
 		return gruposActividad;
-	}
-
-	/**
-	 * method sendCsvTo
-	 *
-	 * @param archivo
-	 * @return
-	 */
-	@RequestMapping( value = "/send/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<?> sendCsvTo(
-			@RequestPart MultipartFile csvFile,
-			HttpSession session)
-	{
-		try
-		{
-			List<Teacher> teachers = new ArrayList<>();
-			try (BufferedReader br = new BufferedReader(new InputStreamReader(csvFile.getInputStream())))
-			{
-				// --- READEING LINES FROM CSV ---
-				String line;
-				br.readLine(); // --- READ 1 MORE TIME FOR HEADERS ---
-				while ((line = br.readLine()) != null)
-				{
-					// --- GETTING TEACHER ---
-					Teacher teacher = this.parsearLineaCSV(line);
-
-					// --- IF TEACHER IS NOT NULL , ADD TO LIST ---
-					if (teacher != null)
-					{
-						log.info("Teacher was create");
-						teachers.add(teacher);
-					}
-				}
-			}
-			catch (IOException exception)
-			{
-				String error = "In/Out exception";
-				HorariosError horariosError = new HorariosError(400, error, exception);
-				log.error(error, horariosError);
-				return ResponseEntity.status(400).body(horariosError);
-			}
-			// --- PUT CSV INFO ON SESSION ---
-			session.setAttribute("csvInfo", teachers);
-			return ResponseEntity.ok().body(teachers);
-		}
-		catch (Exception exception)
-		{
-			// -- CATCH ANY ERROR ---
-			String error = "Server Error";
-			HorariosError horariosError = new HorariosError(500, error, exception);
-
-			return ResponseEntity.status(500).body(horariosError);
-		}
-
-	}
-
-	/**
-	 * Method parsearLineaCSV
-	 *
-	 * @param linea
-	 * @return Teacher
-	 */
-	private Teacher parsearLineaCSV(String linea)
-	{
-		Teacher teacher = null;
-		try
-		{
-			String[] campos = linea.split(",");
-			String nombre = campos[0].trim();
-			String apellido = campos[1].trim();
-			String correo = campos[2].trim();
-			String telefono = campos[3].trim();
-
-			// --- SPLIT BY [ FOR THE ROL LIST ---
-			String[] temporalArray = linea.split("\\[");
-
-			// --- GETTING THE PART OF ROL LIST ---
-			String stringTemporal = temporalArray[temporalArray.length - 1];
-
-			// --- DELETE THE CHAR "]" FOR THE LAST VALUE OF ROL ---
-			stringTemporal = stringTemporal.replace("]", "");
-
-			// -- SPLIT BY "," THE CLEAN ROL STRING ---
-			String[] rolesArray = stringTemporal.split(",");
-
-			// --- GETTING EACH VALUE OF STRING AND PARSE TO ROL ---
-			List<Rol> listaRoles = new ArrayList<>();
-			for (String rol : rolesArray)
-			{
-				switch (rol.toLowerCase().trim())
-				{
-				case "administrador" ->
-				{
-					listaRoles.add(Rol.administrador);
-				}
-				case "docente" ->
-				{
-					listaRoles.add(Rol.docente);
-				}
-				case "conserje" ->
-				{
-					listaRoles.add(Rol.conserje);
-				}
-				}
-			}
-			teacher = new Teacher(nombre, apellido, correo, telefono, listaRoles);
-		}
-		catch (IllegalArgumentException illegalArgumentException)
-		{
-			log.info("Datos de CSV incompletos o incorrectos: " + linea);
-		}
-
-		return teacher;
 	}
 
 	/**
@@ -3302,188 +3081,6 @@ public class TimetableRest
 		}
 	}
 
-	// -- ENDPOINT FOR GETTING FIRST NAME AND LAST NAME OF A TEACHER FOR REFLECTION
-	// --
-
-	/**
-	 * Method getFirstNameSurname
-	 * 
-	 * @return ResponseEntity
-	 */
-	@RequestMapping("/get/namelastname/reflexion")
-	public ResponseEntity<?> getFirstNameSurname()
-	{
-		// -- CREATE A TEACHER OBJECT AND SET ITS ATTRIBUTES --
-		try
-		{
-			Teacher teacher;
-			teacher = new Teacher();
-			teacher.setName("Raul");
-			teacher.setLastName("Diuc");
-			teacher.setEmail("rauldiuc1212@gmail.com");
-			teacher.setTelephoneNumber("655655655");
-
-			// -- ADD A ROLE TO THE TEACHER --
-			List<Rol> roles = new ArrayList<>();
-			roles.add(Rol.docente);
-			teacher.setRoles(roles);
-			// -- CHECK IF THE TEACHER OBJECT IS NOT NULL --
-			if (teacher != null)
-			{
-				// -- RETURN THE FIRST NAME AND LAST NAME OF THE TEACHER AS A RESPONSEENTITY
-				// WITH HTTP STATUS 200 (OK) --
-				return ResponseEntity.ok().body(teacher);
-			}
-			else
-			{
-				// -- TEACHER OBJECT IS NULL, RETURN AN ERROR MESSAGE AS A RESPONSEENTITY WITH
-				// HTTP STATUS 400 (BAD REQUEST) --
-				String error = "Teacher not found";
-				HorariosError horariosError = new HorariosError(400, error, null);
-				log.error(error);
-				return ResponseEntity.status(400).body(horariosError);
-			}
-		}
-		catch (Exception exception)
-		{
-			// -- CATCH ANY ERROR --
-			String error = "Server Error";
-			HorariosError horariosError = new HorariosError(500, error, exception);
-			log.error(error, exception);
-			// -- RETURN A SERVER ERROR MESSAGE AS A RESPONSEENTITY WITH HTTP STATUS 500
-			// (INTERNAL SERVER ERROR) --
-			return ResponseEntity.status(500).body(horariosError);
-		}
-	}
-
-	// -- ENDPOINT FOR GETTING LOCATION INFORMATION OF A STUDENT'S TUTOR --
-	/**
-	 *
-	 * @param name
-	 * @param lastName
-	 * @return ResponseEntity
-	 */
-	@RequestMapping( value = "/get/location/studentTutor",produces = "application/json")
-	public ResponseEntity<?> getLocationStudentTutor(
-			@RequestHeader(required = true) String name,
-			@RequestHeader(required = true) String lastName)
-	{
-
-		try
-		{
-
-			// -- CHECK IF BOTH NAME AND LAST NAME ARE NOT NULL --
-			if ((name != null) && (lastName != null))
-			{
-				// -- CREATE TEACHER WITH FAKE DATA --
-				Teacher teacher = new Teacher();
-				teacher.setName("ObiWan");
-				teacher.setLastName("Kenobi");
-				teacher.setEmail("obiwankenobi1212@gmail.com");
-				teacher.setTelephoneNumber("655655655");
-
-				// -- CREATE CLASSROOM WITH FAKE DATA --
-				Classroom classroom = new Classroom("3 ESO B", "2");
-				// -- ADD A ROLE TO THE TEACHER --
-				List<Rol> roles = new ArrayList<>();
-				roles.add(Rol.docente);
-				teacher.setRoles(roles);
-				// -- CREATE TEACHERMOMENT --
-				TeacherMoment teacherMoment = new TeacherMoment();
-				teacherMoment.setTeacher(teacher);
-				teacherMoment.setClassroom(classroom);
-
-				// -- RETURN THE LOCATION INFORMATION OF THE STUDENT'S TUTOR AS A RESPONSEENTITY
-				// WITH HTTP STATUS 200 (OK) --
-				return ResponseEntity.ok().body(teacherMoment);
-			}
-			else
-			{
-				// -- NAME OR LAST NAME IS NULL, RETURN AN ERROR MESSAGE AS A RESPONSEENTITY
-				// WITH HTTP STATUS 400 (BAD REQUEST) --
-				String error = "Student not found";
-				HorariosError horariosError = new HorariosError(400, error, null);
-				log.error(error);
-				return ResponseEntity.status(400).body(horariosError);
-			}
-		}
-		catch (Exception exception)
-		{
-			// -- CATCH ANY ERROR --
-			String error = "Server Error";
-			HorariosError horariosError = new HorariosError(500, error, exception);
-			log.error(error, exception);
-			// -- RETURN A SERVER ERROR MESSAGE AS A RESPONSEENTITY WITH HTTP STATUS 500
-			// (INTERNAL SERVER ERROR) --
-			return ResponseEntity.status(500).body(horariosError);
-		}
-	}
-
-	// -- ENDPOINT FOR GETTING LOCATION INFORMATION OF A STUDENT'S TUTOR BASED ON
-	// COURSE --
-	/**
-	 *
-	 * @param course
-	 * @param name
-	 * @param lastName
-	 * @return
-	 */
-	@RequestMapping( value = "/get/location/studentTutor/course", produces = "application/json")
-	public ResponseEntity<?> getLocationStudentTutorCourse(
-			@RequestHeader(required = true) String course,
-			@RequestHeader(required = true) String name,
-			@RequestHeader(required = true) String lastName)
-	{
-
-		try
-		{
-
-			// -- CHECK IF NAME, LAST NAME AND COURSE ARE NOT NULL --
-			if ((name != null) && (lastName != null) && (course != null))
-			{
-				// -- CREATE TEACHER WITH FAKE DATA --
-				Teacher teacher = new Teacher();
-				teacher.setName("ObiWan");
-				teacher.setLastName("Kenobi");
-				teacher.setEmail("obiwankenobi1212@gmail.com");
-				teacher.setTelephoneNumber("655655655");
-
-				// -- CREATE CLASSROOM WITH FAKE DATA --
-				Classroom classroom = new Classroom("3 ESO B", "2");
-				// -- ADD A ROLE TO THE TEACHER --
-				List<Rol> roles = new ArrayList<>();
-				roles.add(Rol.docente);
-				teacher.setRoles(roles);
-				// -- CREATE TEACHERMOMENT --
-				TeacherMoment teacherMoment = new TeacherMoment();
-				teacherMoment.setTeacher(teacher);
-				teacherMoment.setClassroom(classroom);
-
-				// -- RETURN THE LOCATION INFORMATION OF THE STUDENT'S TUTOR AND COURSE AS A
-				// RESPONSEENTITY WITH HTTP STATUS 200 (OK) --
-				return ResponseEntity.ok().body(teacherMoment);
-			}
-			else
-			{
-				// -- NAME OR LAST NAME IS NULL, RETURN AN ERROR MESSAGE AS A RESPONSEENTITY
-				// WITH HTTP STATUS 400 (BAD REQUEST) --
-				String error = "Student not found";
-				HorariosError horariosError = new HorariosError(400, error, null);
-				log.error(error);
-				return ResponseEntity.status(400).body(horariosError);
-			}
-		}
-		catch (Exception exception)
-		{
-			// -- CATCH ANY ERROR --
-			String error = "Server Error";
-			HorariosError horariosError = new HorariosError(500, error, exception);
-			log.error(error, exception);
-			// -- RETURN A SERVER ERROR MESSAGE AS A RESPONSEENTITY WITH HTTP STATUS 500
-			// (INTERNAL SERVER ERROR) --
-			return ResponseEntity.status(500).body(horariosError);
-		}
-	}
 	
 	@RequestMapping(value="/get/coursenames",produces = "application/json")
 	public ResponseEntity<?> getCourseNames()
