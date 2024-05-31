@@ -3154,7 +3154,7 @@ public class TimetableRest
 	}
 	
 	@RequestMapping( value = "/get/classroom-planos",produces = "application/json")
-	public ResponseEntity<?> getAllClassroom(@RequestParam(required = true)String planta)
+	public ResponseEntity<?> getAllClassroom(@RequestParam(required = false)String planta)
 	{ 
 		try
 		{
@@ -3237,16 +3237,16 @@ public class TimetableRest
 			//Sacamos la actividad del mapa
 			Actividad actividad = (Actividad) asignaturaActividad.get("actividad");
 			//Sacamos el grupo que se encuentra en el aula
-			Grupo grupo = this.util.searchGroupAulaNow(centroPdfs, actividad);
+			List<Grupo> grupos = this.util.searchGroupAulaNow(centroPdfs, actividad);
 			//Sacamos los alumnos que se encuentran en el aula
-			//List<Student> alumnos = this.util.getAlumnosAulaNow(grupo, this.students);
+			List<Student> alumnos = this.util.getAlumnosAulaNow(grupos, this.students);
 			
 			
 			
 			infoAula.put("profesor", profesor);
 			infoAula.put("asignatura",asignatura);
-			infoAula.put("grupo", grupo);
-			//infoAula.put("alumnos", alumnos);
+			infoAula.put("grupo", grupos);
+			infoAula.put("alumnos", alumnos);
 			
 			return ResponseEntity.ok().body(infoAula);
 		}
@@ -3261,7 +3261,7 @@ public class TimetableRest
 			return ResponseEntity.status(500).body("Error de servidor "+exception.getStackTrace());
 		}
 	}
- 	
+ 		
  	@RequestMapping(method = RequestMethod.POST, value = "/send/sancion", consumes = "application/json")
  	public ResponseEntity<?> sendSancion(@RequestBody(required = true) Student student,
  										 @RequestParam(name = "value",required = true) Integer value,
@@ -3290,6 +3290,31 @@ public class TimetableRest
  		catch(HorariosError exception)
  		{
  			log.error("Los datos proporcionados no son correctos",exception);
+ 			return ResponseEntity.status(exception.getCode()).body(exception.toMap());
+ 		}
+ 		catch(Exception exception)
+ 		{
+ 			log.error("Error de servidor",exception);
+ 			return ResponseEntity.status(500).body("Error de servidor "+exception.getStackTrace());
+ 		}
+ 	}
+ 	
+ 	@RequestMapping(method = RequestMethod.GET, value = "/get/parse-course", produces = "application/json")
+ 	public ResponseEntity<?> localizarAlumno(@RequestParam(name = "course",required = true)String studentCourse)
+ 	{
+ 		try
+ 		{
+ 			String course = this.util.parseStudentGroup(studentCourse, this.centroPdfs.getDatos().getGrupos().getGrupo());
+ 			
+ 			//Se coloca un mapa ya que los cursos de los datos generales pueden contener
+ 			//caracteres que el front no lee bien y con el mapa forzamos a mandarlos
+ 			Map<String,String> map = new HashMap<String, String>();
+ 			map.put("curso", course);
+ 			return ResponseEntity.ok().body(map);
+ 		}
+ 		catch(HorariosError exception)
+ 		{
+ 			log.error("No existe una relacion entre el curso del alumno con los datos generales",exception);
  			return ResponseEntity.status(exception.getCode()).body(exception.toMap());
  		}
  		catch(Exception exception)

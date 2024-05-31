@@ -386,6 +386,9 @@ public class TimeTableUtils
 	 */
 	public List<AulaPlano> buscarPorPlanta(String planta,List<AulaPlano> aulas) throws HorariosError
 	{ 
+		//Establecemos "" por defecto en caso de que planta sea nulo
+		planta = planta==null ? "" : planta;
+		
 		List<AulaPlano> aulasEncontradas = new LinkedList<AulaPlano>();
 		
 		if(aulas.isEmpty())
@@ -393,13 +396,21 @@ public class TimeTableUtils
 			throw new HorariosError(404,"No se ha cargado ninguna informacion sobre aulas");
 		}
 		
-		for(AulaPlano aula:aulas)
+		if(!planta.isEmpty())
 		{
-			if(aula.getPlanta().equals(planta))
+			for(AulaPlano aula:aulas)
 			{
-				aulasEncontradas.add(aula);
+				if(aula.getPlanta().equals(planta))
+				{
+					aulasEncontradas.add(aula);
+				}
 			}
 		}
+		else
+		{
+			aulasEncontradas = aulas;
+		}
+		
 		
 		if(aulasEncontradas.isEmpty())
 		{
@@ -571,56 +582,51 @@ public class TimeTableUtils
 	 * @param actividad
 	 * @return grupo encontrado
 	 */
-	public Grupo searchGroupAulaNow(Centro centro,Actividad actividad)
+	public List<Grupo> searchGroupAulaNow(Centro centro,Actividad actividad)
 	{
-		Grupo grupo = null;
-		String numeroGrupo = "";
+		List<Grupo> grupos = new LinkedList<Grupo>();
+		List<String> numeroGrupo = new LinkedList<String>();
 		
 		//Recogemos los grupos que participan en la actividad
-		GruposActividad grupos = actividad.getGruposActividad();
+		GruposActividad numGrupos = actividad.getGruposActividad();
 		
 		//Recogemos el numero de grupo comparandolo con sus valores
-		if(grupos.getGrupo1()!=null)
+		if(numGrupos.getGrupo1()!=null)
 		{
-			numeroGrupo = grupos.getGrupo1();
+			numeroGrupo.add(numGrupos.getGrupo1());
 		}
-		if(grupos.getGrupo2()!=null && numeroGrupo.isEmpty())
+		if(numGrupos.getGrupo2()!=null)
 		{
-			numeroGrupo = grupos.getGrupo2();
+			numeroGrupo.add(numGrupos.getGrupo2());
 		}
-		if(grupos.getGrupo3()!=null && numeroGrupo.isEmpty())
+		if(numGrupos.getGrupo3()!=null)
 		{
-			numeroGrupo = grupos.getGrupo3();
+			numeroGrupo.add(numGrupos.getGrupo3());
 		}
-		if(grupos.getGrupo4()!=null && numeroGrupo.isEmpty())
+		if(numGrupos.getGrupo4()!=null)
 		{
-			numeroGrupo = grupos.getGrupo4();
+			numeroGrupo.add(numGrupos.getGrupo4());
 		}
-		if(grupos.getGrupo5()!=null && numeroGrupo.isEmpty())
+		if(numGrupos.getGrupo5()!=null)
 		{
-			numeroGrupo = grupos.getGrupo5();
+			numeroGrupo.add(numGrupos.getGrupo5());
 		}
 		
 		//Obtenemos todos los grupos
 		List<Grupo> listaGrupos = centro.getDatos().getGrupos().getGrupo();
-		int index = 0;
-		boolean out = false;
 		
-		//Buscamos los grupos usando su numero identificador
-		while(index<listaGrupos.size() && !out)
+		for(Grupo item:listaGrupos)
 		{
-			Grupo grp = listaGrupos.get(index);
-			
-			if(grp.getNumIntGr().equals(numeroGrupo))
+			for(String id:numeroGrupo)
 			{
-				grupo = grp;
-				out = true;
+				if(item.getNumIntGr().equals(id))
+				{
+					grupos.add(item);
+				}
 			}
-			
-			index++;
 		}
 		
-		return grupo;
+		return grupos;
 	}
 	
 	/**
@@ -631,56 +637,60 @@ public class TimeTableUtils
 	 * @return lista de alumnos por grupo
 	 * @throws HorariosError
 	 */
-	public List<Student> getAlumnosAulaNow(Grupo grupo, List<Student> alumnos) throws HorariosError
+	public List<Student> getAlumnosAulaNow(List<Grupo> grupos, List<Student> alumnos) throws HorariosError
 	{
 		List<Student> alumnosAula = new LinkedList<Student>();
-		//Para el caso de bachillerato que se forma de BHCS (Bachillerato ciencias sociales) o
-		//BCT (Bachillerato Ciencias Tecnologicas) o BC (Bachillerato) se aplicara un filtro especial
-		//Para recoger solo esos alumnos
-		String alumnosBach = this.getAlumnosBach(grupo.getNombre());
 		
-		if(alumnosBach.isEmpty())
+		for(Grupo grupo:grupos)
 		{
-			//Obtenemos el grado del curso en caso de que este vacio lanzamos un error
-			String grade = getGroupGrade(grupo.getNombre());
+			//Para el caso de bachillerato que se forma de BHCS (Bachillerato ciencias sociales) o
+			//BCT (Bachillerato Ciencias Tecnologicas) o BC (Bachillerato) se aplicara un filtro especial
+			//Para recoger solo esos alumnos
+			String grupoEspecial = this.getAlumnosBach(grupo.getNombre());
 			
-			if(grade.isEmpty())
+			//Existen casos que no se pueden trasndformar de forma general por ejemplo 2º ESO-C-BILING.
+			//se aplica un filtro especial para recoger solo esos alumnos
+			grupoEspecial = grupoEspecial.isEmpty() ? this.getSpecialGroup(grupo.getNombre()) : grupoEspecial;
+			
+			if(grupoEspecial.isEmpty())
 			{
-				throw new HorariosError(400,"El curso seleccionado "+grupo.getNombre()+" no coincide con ningun curso de los alumnos");
-			}
-			
-			/* Esta variable sirve para convertir el curso de un grupo al curso de los
-			 * alumnos ya que estos son distintos por ejemplo en bachillerato el grupo
-			 * de los datos del centro es 1º BACH A y en los alumnos 1 BHCS A
-			 */ 
-			String grupoAlumno = this.transformGroup(grupo.getNombre());
-			
-			String letraGrupo = this.getGroupLetter(grupo.getNombre());
-			
-			String completeGrade = grade+" "+grupoAlumno+" "+letraGrupo;
-			
-			for(Student alumno:alumnos)
-			{
-				if(completeGrade.equals(alumno.getCourse()))
+				//Obtenemos el grado del curso en caso de que este vacio lanzamos un error
+				String grade = getGroupGrade(grupo.getNombre());
+				
+				if(grade.isEmpty())
 				{
-					alumnosAula.add(alumno);
+					throw new HorariosError(400,"El curso seleccionado "+grupo.getNombre()+" no coincide con ningun curso de los alumnos");
+				}
+				
+				//Tranformamos los grupos del xml a los grupos de los alumnos del csv
+				String grupoAlumno = this.transformGroup(grupo.getNombre());
+				
+				//Letra del grupo, puede venir vacia (2 DAM, 2 FPB, etc)
+				String letraGrupo = this.getGroupLetter(grupo.getNombre());
+				
+				//Grupo completo
+				String completeGrade = grade+" "+grupoAlumno+" "+letraGrupo;
+				
+				//Busqueda de los alumnos
+				for(Student alumno:alumnos)
+				{
+					if(completeGrade.equals(alumno.getCourse()))
+					{
+						alumnosAula.add(alumno);
+					}
 				}
 			}
-		}
-		else
-		{
-			for(Student alumno:alumnos)
+			else
 			{
-				if(alumnosBach.equals(alumno.getCourse()))
+				//Busqueda de los alumnos
+				for(Student alumno:alumnos)
 				{
-					alumnosAula.add(alumno);
+					if(grupoEspecial.equals(alumno.getCourse()))
+					{
+						alumnosAula.add(alumno);
+					}
 				}
 			}
-		}
-		
-		if(alumnosAula.isEmpty())
-		{
-			throw new HorariosError(404,"Los cursos de los datos generales no coinciden con los de los alumnos");
 		}
 		
 		return alumnosAula;
@@ -720,22 +730,22 @@ public class TimeTableUtils
 			grupoAlumno = "GMNTL";
 		}
 		//Nombre de mecatronica en alumnos
-		if(group.contains("MECATRÓNICA INDUSTRIAL"))
+		else if(group.contains("MECATRÓNICA INDUSTRIAL"))
 		{
 			grupoAlumno = "MEC";
 		}
 		//Nombre de Formacion Profesional Basica en alumnos
-		if(group.contains("Formación Profesional Básica"))
+		else if(group.contains("Formación Profesional Básica"))
 		{
 			grupoAlumno = "CFGB";
 		}
 		//Nombre de DAM en alumnos
-		if(group.contains("CFGS DAM"))
+		else if(group.contains("CFGS DAM"))
 		{
 			grupoAlumno = "DAM";
 		}
 		//Nombre de ESO en alumnos
-		if(group.contains("ESO"))
+		else if(group.contains("ESO"))
 		{
 			grupoAlumno = "ESO";
 		}
@@ -788,6 +798,60 @@ public class TimeTableUtils
 		
 		return letraGrupo;
 	}
+	/**
+	 * Metodo que transforma los grupos del xml a los del csv de alumnos
+	 * para los casos especiales que no se pueden transformar de forma
+	 * general
+	 * @param group
+	 * @return grupo transformado
+	 */
+	private String getSpecialGroup(String group)
+	{
+		String studentGroup = "";
+		switch(group)
+		{
+			case "1ESO C- Biling":
+			{
+				studentGroup = "1 ESO C";
+				break;
+			}
+			case "2º ESO-B-Biling":
+			{
+				studentGroup = "2 ESO B";
+				break;
+			}
+			case "2º ESO-C-BILING.":
+			{
+				studentGroup = "2 ESO C";
+				break;
+			}
+			case "2ºA":
+			{
+				studentGroup = "2 ESO A";
+				break;
+			}
+			case "3ESOCD-DIVER":
+			{
+				studentGroup = "3 ESO D";
+				break;
+			}
+			case "3º ESO-C BILING.":
+			{
+				studentGroup = "3 ESO C";
+				break;
+			}
+			case "4º ESO-DIVER":
+			{
+				studentGroup = "4º ESO-DIVER";
+				break;
+			}
+			default:
+			{
+				studentGroup = "";
+			}
+		}
+		return studentGroup;
+	}
 	
 	/**
 	 * Metodo que busca un estudiante proporcionado por la web y
@@ -821,6 +885,77 @@ public class TimeTableUtils
 		{
 			throw new HorariosError(404,"El estudiante proporcionado no se encuentra en los datos generales");
 		}
+	}
+	
+	public String parseStudentGroup (String group, List<Grupo> grupos) throws HorariosError
+	{
+		String grupoFinal = "";
+		int index = 0;
+		boolean out = false;
+		while(index<grupos.size() && !out)
+		{
+			Grupo grupo = grupos.get(index);
+			
+			if(grupo.getNombre().equals("GRecr") || grupo.getNombre().equals("Guardia Biblioteca") || grupo.getNombre().equals("Guardias"))
+			{
+				index++;
+				continue;
+			}
+			//Para el caso de bachillerato que se forma de BHCS (Bachillerato ciencias sociales) o
+			//BCT (Bachillerato Ciencias Tecnologicas) o BC (Bachillerato) se aplicara un filtro especial
+			//Para recoger solo esos alumnos
+			String grupoEspecial = this.getAlumnosBach(grupo.getNombre());
+			
+			//Existen casos que no se pueden trasndformar de forma general por ejemplo 2º ESO-C-BILING.
+			//se aplica un filtro especial para recoger solo esos alumnos
+			grupoEspecial = grupoEspecial.isEmpty() ? this.getSpecialGroup(grupo.getNombre()) : grupoEspecial;
+			
+			if(grupoEspecial.isEmpty())
+			{
+				//Obtenemos el grado del curso en caso de que este vacio lanzamos un error
+				String grade = getGroupGrade(grupo.getNombre());
+				
+				if(grade.isEmpty())
+				{
+					throw new HorariosError(400,"El curso seleccionado "+group+" no coincide con ningun curso de los datos generales");
+				}
+				
+				//Tranformamos los grupos del xml a los grupos de los alumnos del csv
+				String grupoAlumno = this.transformGroup(grupo.getNombre());
+				
+				//Letra del grupo, puede venir vacia (2 DAM, 2 FPB, etc)
+				String letraGrupo = this.getGroupLetter(grupo.getNombre());
+				
+				//Grupo completo
+				String grupoCompleto = grade+" "+grupoAlumno+" "+letraGrupo;
+				
+				grupoCompleto = grupoCompleto.trim();
+				
+				if(grupoCompleto.equals(group))
+				{
+					grupoFinal = grupo.getNombre();
+					out = true;
+				}
+			}
+			else
+			{
+				//Busqueda de los alumnos
+				if(grupoEspecial.equals(group))
+				{
+					grupoFinal = grupo.getNombre();
+					out = true;
+				}
+			}
+			
+			index++;
+		}
+		if(grupoFinal.isEmpty())
+		{
+			throw new HorariosError(404,"No se ha podido encontrar ningun curso en los datos generales con este valor "+group);
+		}
+		
+		return grupoFinal;
+		
 	}
 	
 }
