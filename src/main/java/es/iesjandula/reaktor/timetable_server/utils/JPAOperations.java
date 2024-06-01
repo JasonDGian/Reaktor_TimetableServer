@@ -188,8 +188,7 @@ public class JPAOperations
 		//la fecha de vuelta a null
 		for(VisitasServicio visita:visitas)
 		{
-			if(visita.getVisitasServicioId().getAlumnoId().equals(idAlumno) && visita.getVisitasServicioId().getCursoId().equals(cursoId)
-					&& visita.getFechaVuelta()!=null)
+			if(visita.getVisitasServicioId().getAlumnoId().equals(idAlumno) && visita.getVisitasServicioId().getCursoId().equals(cursoId))
 			{
 				visitasAlumno.add(visita);
 			}
@@ -217,10 +216,11 @@ public class JPAOperations
 				if(this.timeOperation.compareDate(itemDate, date))
 				{
 					Date horaVuelta = item.getFechaVuelta();
+					String valorFechaVuelta = horaVuelta==null ? "No ha regresado" : this.timeOperation.transformHour(horaVuelta.getHours(), horaVuelta.getMinutes());
 					//Anotamos la fecha y la hora con las que ha ido al baño
 					Map<String,String> datosVisita = new HashMap<String,String>();
 					datosVisita.put("dia",itemDate);
-					datosVisita.put("horas", this.timeOperation.transformHour(date.getHours(), date.getMinutes())+" - "+this.timeOperation.transformHour(horaVuelta.getHours(), horaVuelta.getMinutes()));
+					datosVisita.put("horas", this.timeOperation.transformHour(date.getHours(), date.getMinutes())+" - "+valorFechaVuelta);
 					visitaAlumno.add(datosVisita);
 				}
 			}
@@ -275,11 +275,6 @@ public class JPAOperations
 			//Iteramos las visitas
 			for(VisitasServicio item:visitas)
 			{
-				//Saltamos las visitas que su fecha de vuelta es nula
-				if(item.getFechaVuelta()==null)
-				{
-					continue;
-				}
 				Date date = item.getVisitasServicioId().getFechaIda();
 				//Nos quedamos solo con las que coincida la fecha
 				if(this.timeOperation.compareDate(itemDate, date))
@@ -287,12 +282,13 @@ public class JPAOperations
 					Alumnos alumno = this.alumnoRepo.getReferenceById(item.getVisitasServicioId().getAlumnoId());
 					Date horaIda = item.getVisitasServicioId().getFechaIda();
 					Date horaVuelta = item.getFechaVuelta();
+					String valorFechaVuelta = horaVuelta==null ? "No ha regresado" : this.timeOperation.transformHour(horaVuelta.getHours(), horaVuelta.getMinutes());
 					//Anotamos la fecha y la hora con las que ha ido al baño
 					Map<String,Object> datosVisita = new HashMap<String,Object>();
 					datosVisita.put("alumno",alumno);
 					datosVisita.put("curso",item.getVisitasServicioId().getCursoId().getNombre());
 					datosVisita.put("dia", itemDate);
-					datosVisita.put("horas", this.timeOperation.transformHour(horaIda.getHours(), horaIda.getMinutes())+" - "+this.timeOperation.transformHour(horaVuelta.getHours(), horaVuelta.getMinutes()));
+					datosVisita.put("horas", this.timeOperation.transformHour(horaIda.getHours(), horaIda.getMinutes())+" - "+valorFechaVuelta);
 					visitasAlumnos.add(datosVisita);
 				}
 			}
