@@ -15,7 +15,7 @@ server:
     keyStoreType: PKCS12
 logging:
     level:
-        root: WARN
+        root: DEBUG
     file:
         name: /tmp/reaktor_timeTableServer.log
         max-size: 1MB
