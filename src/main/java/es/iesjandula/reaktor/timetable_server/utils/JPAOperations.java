@@ -216,7 +216,7 @@ public class JPAOperations
 				if(this.timeOperation.compareDate(itemDate, date))
 				{
 					Date horaVuelta = item.getFechaVuelta();
-					String valorFechaVuelta = horaVuelta==null ? "No ha regresado" : this.timeOperation.transformHour(horaVuelta.getHours(), horaVuelta.getMinutes());
+					String valorFechaVuelta = horaVuelta==null ? "No se pulsó la vuelta" : this.timeOperation.transformHour(horaVuelta.getHours(), horaVuelta.getMinutes());
 					//Anotamos la fecha y la hora con las que ha ido al baño
 					Map<String,String> datosVisita = new HashMap<String,String>();
 					datosVisita.put("dia",itemDate);
@@ -282,7 +282,7 @@ public class JPAOperations
 					Alumnos alumno = this.alumnoRepo.getReferenceById(item.getVisitasServicioId().getAlumnoId());
 					Date horaIda = item.getVisitasServicioId().getFechaIda();
 					Date horaVuelta = item.getFechaVuelta();
-					String valorFechaVuelta = horaVuelta==null ? "No ha regresado" : this.timeOperation.transformHour(horaVuelta.getHours(), horaVuelta.getMinutes());
+					String valorFechaVuelta = horaVuelta==null ? "No se pulsó la vuelta"  : this.timeOperation.transformHour(horaVuelta.getHours(), horaVuelta.getMinutes());
 					//Anotamos la fecha y la hora con las que ha ido al baño
 					Map<String,Object> datosVisita = new HashMap<String,Object>();
 					datosVisita.put("alumno",alumno);
