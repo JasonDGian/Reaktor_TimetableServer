@@ -2,9 +2,12 @@ package es.iesjandula.reaktor.timetable_server.utils;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import es.iesjandula.reaktor.timetable_server.exceptions.HorariosError;
 import es.iesjandula.reaktor.timetable_server.models.ActitudePoints;
@@ -484,5 +487,71 @@ public class JPAOperations
 		return puntosDto.getPuntosId();
 	}
 	
+	/**
+	 * Metodo que busca y encuentra los alumnos que se encuentran en el baño
+	 * @param students
+	 * @return Conjunto de alumnos que se encuentran en el baño
+	 * @throws HorariosError
+	 */
+	public List<Student> findStudentBathroom(List<Student>students) throws HorariosError
+	{
+		List<Student> alumnosInBathroom = new LinkedList<Student>();
+		
+		if(students.isEmpty())
+		{
+			throw new HorariosError(400,"No se han cargado los datos de los estudiantes");
+		}
+		
+		List<VisitasServicio> visitas = this.visitasRepo.findAll();
+		
+		for(VisitasServicio visita:visitas)
+		{
+			Optional<Alumnos> optionalAlumno = null;
+			Optional<Curso> optionalCurso = null;
+			if(visita.getFechaVuelta()==null)
+			{
+				optionalAlumno =  this.alumnoRepo.findById(visita.getVisitasServicioId().getAlumnoId());
+				optionalCurso = this.cursoRepo.findById(visita.getVisitasServicioId().getCursoId());
+			}
+			
+			if((optionalAlumno!=null && !optionalAlumno.isEmpty()) && (optionalCurso!=null && !optionalCurso.isEmpty()))
+			{
+				Alumnos alumno = optionalAlumno.get();
+				Curso curso = optionalCurso.get();
+				
+				for(Student student:students)
+				{
+					String cursoAcademico = student.getMatriculationYear()+"/"+(Integer.parseInt(student.getMatriculationYear())+1);
+					if(student.getName().equals(alumno.getNombre()) && student.getLastName().equals(alumno.getApellidos())
+							&& student.getCourse().equals(curso.getCursoId().getNombre())
+							&& cursoAcademico.equals(curso.getCursoId().getAnioAcademico()))
+					{
+						alumnosInBathroom.add(student);
+					}
+				}
+			}
+		}
+		alumnosInBathroom = this.limpiarRepetidos(alumnosInBathroom);
+		return alumnosInBathroom;
+	}
 	
+	/**
+	 * Metodo que elimina los alumnos repetidos de la lista que se pasa por parametro
+	 * @param students 
+	 * @return lista sin alumnos repetidos
+	 */
+	private List<Student> limpiarRepetidos(List<Student> students)
+	{
+		List<Student> listaCompleta = new LinkedList<Student>();
+		
+		for(Student student:students)
+		{
+			if(!listaCompleta.contains(student))
+			{
+				listaCompleta.add(student);
+			}
+		}
+		
+		return listaCompleta;
+	} 
 }

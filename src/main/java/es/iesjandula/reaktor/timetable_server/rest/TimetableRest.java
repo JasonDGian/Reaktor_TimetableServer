@@ -1,10 +1,8 @@
 package es.iesjandula.reaktor.timetable_server.rest;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,6 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -3315,6 +3314,27 @@ public class TimetableRest
  		catch(HorariosError exception)
  		{
  			log.error("No existe una relacion entre el curso del alumno con los datos generales",exception);
+ 			return ResponseEntity.status(exception.getCode()).body(exception.toMap());
+ 		}
+ 		catch(Exception exception)
+ 		{
+ 			log.error("Error de servidor",exception);
+ 			return ResponseEntity.status(500).body("Error de servidor "+exception.getStackTrace());
+ 		}
+ 	}
+ 	
+ 	@RequestMapping(method = RequestMethod.GET,value = "/get/alumnos-bathroom", produces = "application/json")
+ 	public ResponseEntity<?> getAlumnosBathroom()
+ 	{
+ 		try
+ 		{
+ 			List<Student> students = this.operations.findStudentBathroom(this.students);
+ 			students = students.isEmpty() ? null : students;
+ 			return ResponseEntity.ok().body(students);
+ 		}
+ 		catch(HorariosError exception)
+ 		{
+ 			log.error("Error al encontrar los estudiantes en el baño",exception);
  			return ResponseEntity.status(exception.getCode()).body(exception.toMap());
  		}
  		catch(Exception exception)
