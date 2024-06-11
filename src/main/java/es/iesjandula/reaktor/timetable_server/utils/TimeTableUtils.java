@@ -669,7 +669,11 @@ public class TimeTableUtils
 				String letraGrupo = this.getGroupLetter(grupo.getNombre());
 				
 				//Grupo completo
-				String completeGrade = grade+" "+grupoAlumno+" "+letraGrupo;
+				String completeGrade = grade + " " + grupoAlumno ;
+				if (letraGrupo != null && !letraGrupo.isEmpty())
+				{
+					completeGrade = completeGrade + " " + letraGrupo;
+				}
 				
 				//Busqueda de los alumnos
 				for(Student alumno:alumnos)
