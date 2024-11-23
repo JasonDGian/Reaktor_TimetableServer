@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Student implements Comparable<Student>
-{
+{	
+
 	/** Attribute name*/
 	private String name;
 	

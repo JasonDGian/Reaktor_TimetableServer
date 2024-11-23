@@ -1,5 +1,7 @@
 package es.iesjandula.reaktor.timetable_server.models.parse;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

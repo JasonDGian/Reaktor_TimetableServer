@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -73,9 +72,14 @@ import es.iesjandula.reaktor.timetable_server.models.parse.Profesores;
 import es.iesjandula.reaktor.timetable_server.models.parse.TimeSlot;
 import es.iesjandula.reaktor.timetable_server.models.parse.TramosHorarios;
 import es.iesjandula.reaktor.timetable_server.repository.IAlumnoRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IAsignaturaRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IAulaRepository;
 import es.iesjandula.reaktor.timetable_server.repository.ICursosRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IGrupoRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IProfesorRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IPuntosConvivenciaALumnoCursoRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IPuntosConvivenciaRepository;
+import es.iesjandula.reaktor.timetable_server.repository.ITimeSlotRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IVisitasServicioRepository;
 import es.iesjandula.reaktor.timetable_server.utils.JPAOperations;
 import es.iesjandula.reaktor.timetable_server.utils.StudentOperation;
@@ -132,6 +136,23 @@ public class TimetableRest
 	@Autowired
 	private IVisitasServicioRepository visitasRepo;
 	
+	// -------------------- REPOS PRUEBAS JAYDE ----------------------------
+	@Autowired
+	private IGrupoRepository grupoRepo;
+	
+	@Autowired
+	private IAsignaturaRepository asignaturaRepo;
+	
+	@Autowired
+	private IAulaRepository aulaRepo;
+	
+	@Autowired
+	private IProfesorRepository profesorRepo;
+	
+	@Autowired
+	private ITimeSlotRepository timeSlotRepo;
+	// -------------------- FIN REPOS PRUEBAS JAYDE ----------------------------
+		
 	public TimetableRest()
 	{
 		this.util = new TimeTableUtils();
@@ -198,6 +219,7 @@ public class TimetableRest
 					asignaturas.setAsignatura(asignaturasList);
 					log.info(asignaturas.toString());
 					datos.setAsignaturas(asignaturas);
+										
 					// --------------------------------------------------------------------------------------------------
 
 					// --- OBJECT GRUPOS ---
@@ -406,9 +428,49 @@ public class TimetableRest
 					return ResponseEntity.status(400).body(horariosException.toMap());
 				}
 
-				// --- SESSION ---------
-				session.setAttribute("storedCentro", centro);
-				log.info("UserVisits: " + centro);
+				// -------- SESSION ---------
+				// NOTA: DESACTIVADO PORQUE YA NO SE USA EL OBJETO EN SESIÓN.
+				// Ahora se emplean las llamadas a base de datos.
+				//session.setAttribute("storedCentro", centro);
+				//log.info("UserVisits: " + centro);
+				
+				// ----------------------------------------------------------------------- PRUEBAS JAYDEE
+				// Crear las entidades para cada modelo que está en paquete PARSE.
+				// Una vez creadas las entidades, modificar el endpoint de parseo para que en lugar de 
+				// cargarlas en sesión las carge en BBDD.
+				// Una vez confirmada la carga en BBDD hacer la recuperación para los otros endpoints.
+				// el usuario por defecto es 'user' la pass se genera automatico y aparecen pro consola al iniciar el serivdor.
+				// EL FICHERO A PARSEAR ES HORARIOS.XML 
+				
+				// --------------------------- INICIO PRUEBAS JAYDEE -----------------------------------------
+			
+				List<Asignatura> asignatuasLista = centro.getDatos().getAsignaturas().getAsignatura();
+				for ( Asignatura asignatura : asignatuasLista ) {
+					asignaturaRepo.saveAndFlush(asignatura);
+				}
+				
+				List<Grupo> gruposLista = centro.getDatos().getGrupos().getGrupo();
+				for ( Grupo grupo : gruposLista ) {
+					grupoRepo.saveAndFlush(grupo);
+				}
+				
+				List<Aula> aulaLista = centro.getDatos().getAulas().getAula();
+				for ( Aula aula : aulaLista ) {
+					aulaRepo.saveAndFlush(aula);
+				}
+				
+				List<Profesor> profesorLista = centro.getDatos().getProfesores().getProfesor();
+				for ( Profesor profesor : profesorLista ) {
+					profesorRepo.saveAndFlush(profesor);
+				}
+				
+				List<TimeSlot> timeSlotLista = centro.getDatos().getTramosHorarios().getTramo();
+				for ( TimeSlot timeSlot : timeSlotLista ) {
+					timeSlotRepo.saveAndFlush(timeSlot);
+				}
+				
+				// --------------------------- FIN PRUEBAS JAYDEE -----------------------------------------
+				
 				// --- SESSION RESPONSE_ENTITY ---------
 				this.centroPdfs = centro;
 				return ResponseEntity.ok(session.getAttribute("storedCentro"));

@@ -100,6 +100,7 @@ public class StudentOperation
 				splitDatos[8] = null;
 			}
 			
+
 			students.add(new Student(splitDatos[1],splitDatos[0],splitDatos[2],splitDatos[3],splitDatos[4],splitDatos[5],splitDatos[6],splitDatos[7],splitDatos[8]));
 		}
 		return students;
