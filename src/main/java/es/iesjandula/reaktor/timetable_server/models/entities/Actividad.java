@@ -1,5 +1,12 @@
-package es.iesjandula.reaktor.timetable_server.models.parse;
+package es.iesjandula.reaktor.timetable_server.models.entities;
 
+import es.iesjandula.reaktor.timetable_server.models.parse.GruposActividad;
+import es.iesjandula.reaktor.timetable_server.models.parse.HorarioAsig;
+import es.iesjandula.reaktor.timetable_server.models.parse.HorarioGrup;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,29 +18,37 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
 public class Actividad implements Comparable<Actividad>
 {
 	/** Attribute gruposActividad */
+	@OneToOne
 	private GruposActividad gruposActividad;
 
-	/** Attribute numAct */
+	@Id
+	//Numero de actividad.
 	private String numAct;
 
-	/** Attribute numUn */
+	// Numero de unidades distintas.
 	private String numUn;
 
 	/** Attribute tramo */
-	private String tramo;
-
+	@OneToOne
+	private TimeSlot tramo;			// Pruebas Jaydee : Convertido a entidad desde String.
+	
 	/** Attribute aula */
-	private String aula;
+	@OneToOne
+	private Aula aula;				// Pruebas Jaydee : Convertido a entidad desde String.
 
+	@OneToOne
 	/** Attribute profesor */
-	private String profesor;
+	private Profesor profesor;		// Pruebas Jaydee : Convertido a entidad desde String.
 
+	@OneToOne
 	/** Attribute asignatura */
-	private String asignatura;
+	private Asignatura asignatura; 	// Pruebas Jaydee : Convertido a entidad desde String.
 
+	
 	/**
 	 * Method compareTo
 	 * @param other
@@ -43,8 +58,9 @@ public class Actividad implements Comparable<Actividad>
 	public int compareTo(Actividad other)
 	{
 		// -- USED FOR SORT ACTIVIDAD BY TRAMO ID ORDER ---
-		int thisNumber = Integer.parseInt(this.tramo);
-		int otherNumber = Integer.parseInt(other.tramo);
+		// PRUEBAS JAYUDEE: Metodo modificado añadiendo .getNumTr() a los tramos.
+		int thisNumber = Integer.parseInt(this.tramo.getNumTr());
+		int otherNumber = Integer.parseInt(other.tramo.getNumTr());
 		return thisNumber-otherNumber;
 	}
 }

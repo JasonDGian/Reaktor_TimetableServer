@@ -21,7 +21,7 @@ import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import es.iesjandula.reaktor.timetable_server.exceptions.HorariosError;
-import es.iesjandula.reaktor.timetable_server.models.parse.Actividad;
+import es.iesjandula.reaktor.timetable_server.models.entities.Actividad;
 import es.iesjandula.reaktor.timetable_server.models.parse.Asignatura;
 import es.iesjandula.reaktor.timetable_server.models.parse.Aula;
 import es.iesjandula.reaktor.timetable_server.models.parse.Centro;

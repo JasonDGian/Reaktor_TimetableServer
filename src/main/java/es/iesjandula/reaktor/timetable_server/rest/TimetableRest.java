@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -47,15 +48,17 @@ import es.iesjandula.reaktor.timetable_server.models.Rol;
 import es.iesjandula.reaktor.timetable_server.models.Student;
 import es.iesjandula.reaktor.timetable_server.models.Teacher;
 import es.iesjandula.reaktor.timetable_server.models.TeacherMoment;
-import es.iesjandula.reaktor.timetable_server.models.parse.Actividad;
-import es.iesjandula.reaktor.timetable_server.models.parse.Asignatura;
+import es.iesjandula.reaktor.timetable_server.models.entities.Actividad;
+import es.iesjandula.reaktor.timetable_server.models.entities.Asignatura;
+import es.iesjandula.reaktor.timetable_server.models.entities.Aula;
+import es.iesjandula.reaktor.timetable_server.models.entities.Grupo;
+import es.iesjandula.reaktor.timetable_server.models.entities.Profesor;
+import es.iesjandula.reaktor.timetable_server.models.entities.TimeSlot;
 import es.iesjandula.reaktor.timetable_server.models.parse.Asignaturas;
-import es.iesjandula.reaktor.timetable_server.models.parse.Aula;
 import es.iesjandula.reaktor.timetable_server.models.parse.AulaPlano;
 import es.iesjandula.reaktor.timetable_server.models.parse.Aulas;
 import es.iesjandula.reaktor.timetable_server.models.parse.Centro;
 import es.iesjandula.reaktor.timetable_server.models.parse.Datos;
-import es.iesjandula.reaktor.timetable_server.models.parse.Grupo;
 import es.iesjandula.reaktor.timetable_server.models.parse.Grupos;
 import es.iesjandula.reaktor.timetable_server.models.parse.GruposActividad;
 import es.iesjandula.reaktor.timetable_server.models.parse.HorarioAsig;
@@ -67,9 +70,7 @@ import es.iesjandula.reaktor.timetable_server.models.parse.HorariosAsignaturas;
 import es.iesjandula.reaktor.timetable_server.models.parse.HorariosAulas;
 import es.iesjandula.reaktor.timetable_server.models.parse.HorariosGrupos;
 import es.iesjandula.reaktor.timetable_server.models.parse.HorariosProfesores;
-import es.iesjandula.reaktor.timetable_server.models.parse.Profesor;
 import es.iesjandula.reaktor.timetable_server.models.parse.Profesores;
-import es.iesjandula.reaktor.timetable_server.models.parse.TimeSlot;
 import es.iesjandula.reaktor.timetable_server.models.parse.TramosHorarios;
 import es.iesjandula.reaktor.timetable_server.repository.IAlumnoRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IAsignaturaRepository;
@@ -151,6 +152,7 @@ public class TimetableRest
 	
 	@Autowired
 	private ITimeSlotRepository timeSlotRepo;
+	
 	// -------------------- FIN REPOS PRUEBAS JAYDE ----------------------------
 		
 	public TimetableRest()
@@ -581,7 +583,9 @@ public class TimetableRest
 				// --- GETTING GRUPOS ACTIVIDAD ---
 				GruposActividad gruposActividad = new GruposActividad();
 				// ((Element)actividadNodeList.item(j)).getElementsByTagName("GRUPOS_ACTIVIDAD").item(0).getAttributes().item(0).getTextContent()
-
+				
+				
+				
 				// --- IF THE ELEMENT GRUPOS_ACTIVIDAD HAS 1 , 2, 3 , 4 OR 5 ATTRIBUTES---
 				NamedNodeMap gruposActividadNodeMap = ((Element) actividadNodeList.item(j))
 						.getElementsByTagName("GRUPOS_ACTIVIDAD").item(0).getAttributes();
@@ -730,15 +734,22 @@ public class TimetableRest
 	 */
 	private void gettingValuesOfActividad(NodeList actividadNodeList, List<Actividad> actividadList)
 	{
+		// Por cada elemento en el listado de nodos de Actividad.
 		for (int j = 0; j < actividadNodeList.getLength(); j++)
 		{
 			Actividad newActividad = new Actividad();
-			newActividad.setAula(actividadNodeList.item(j).getAttributes().item(0).getTextContent());
+			
+			Optional<Aula> aula = aulaRepo.findById(actividadNodeList.item(j).getAttributes().item(0).getTextContent());
+			if ( aula.isPresent() ) {
+				newActividad.setAula(aula.get());
+			}
+			
+			//newActividad.setAula(actividadNodeList.item(j).getAttributes().item(0).getTextContent());
 			newActividad.setNumAct(actividadNodeList.item(j).getAttributes().item(1).getTextContent());
 			newActividad.setNumUn(actividadNodeList.item(j).getAttributes().item(2).getTextContent());
 			newActividad.setTramo(actividadNodeList.item(j).getAttributes().item(4).getTextContent());
 			newActividad.setProfesor(actividadNodeList.item(j).getAttributes().item(3).getTextContent());
-
+			
 			// --- GETTING GRUPOS ACTIVIDAD ---
 			GruposActividad gruposActividad = new GruposActividad();
 			// ((Element)actividadNodeList.item(j)).getElementsByTagName("GRUPOS_ACTIVIDAD").item(0).getAttributes().item(0).getTextContent()

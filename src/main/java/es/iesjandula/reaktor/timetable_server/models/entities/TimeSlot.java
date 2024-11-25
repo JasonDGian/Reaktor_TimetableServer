@@ -1,4 +1,4 @@
-package es.iesjandula.reaktor.timetable_server.models.parse;
+package es.iesjandula.reaktor.timetable_server.models.entities;
 
 
 

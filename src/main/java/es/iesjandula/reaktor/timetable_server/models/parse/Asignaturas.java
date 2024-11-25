@@ -2,9 +2,7 @@ package es.iesjandula.reaktor.timetable_server.models.parse;
 
 import java.util.List;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import es.iesjandula.reaktor.timetable_server.models.entities.Asignatura;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

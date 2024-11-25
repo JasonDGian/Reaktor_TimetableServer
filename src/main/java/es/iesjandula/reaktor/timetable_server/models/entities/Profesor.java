@@ -1,4 +1,4 @@
-package es.iesjandula.reaktor.timetable_server.models.parse;
+package es.iesjandula.reaktor.timetable_server.models.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -16,10 +16,10 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Profesor implements Comparable<Profesor>
 {
-	@Id
+
 	/** Attribute numIntPR*/
 	private String numIntPR;
-	
+	@Id
 	/** Attribute abreviatura*/
 	private String abreviatura;
 	
