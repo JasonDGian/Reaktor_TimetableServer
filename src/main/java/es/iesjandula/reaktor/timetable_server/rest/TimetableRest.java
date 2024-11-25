@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -48,6 +47,11 @@ import es.iesjandula.reaktor.timetable_server.models.Rol;
 import es.iesjandula.reaktor.timetable_server.models.Student;
 import es.iesjandula.reaktor.timetable_server.models.Teacher;
 import es.iesjandula.reaktor.timetable_server.models.TeacherMoment;
+import es.iesjandula.reaktor.timetable_server.models.entities.AsignaturaEntity;
+import es.iesjandula.reaktor.timetable_server.models.entities.AulaEntity;
+import es.iesjandula.reaktor.timetable_server.models.entities.GrupoEntity;
+import es.iesjandula.reaktor.timetable_server.models.entities.ProfesorEntity;
+import es.iesjandula.reaktor.timetable_server.models.entities.TimeSlotEntity;
 import es.iesjandula.reaktor.timetable_server.models.parse.Actividad;
 import es.iesjandula.reaktor.timetable_server.models.parse.Asignatura;
 import es.iesjandula.reaktor.timetable_server.models.parse.Asignaturas;
@@ -73,9 +77,14 @@ import es.iesjandula.reaktor.timetable_server.models.parse.Profesores;
 import es.iesjandula.reaktor.timetable_server.models.parse.TimeSlot;
 import es.iesjandula.reaktor.timetable_server.models.parse.TramosHorarios;
 import es.iesjandula.reaktor.timetable_server.repository.IAlumnoRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IAsignaturaRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IAulaRepository;
 import es.iesjandula.reaktor.timetable_server.repository.ICursosRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IGrupoRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IProfesorRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IPuntosConvivenciaALumnoCursoRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IPuntosConvivenciaRepository;
+import es.iesjandula.reaktor.timetable_server.repository.ITimeSlotRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IVisitasServicioRepository;
 import es.iesjandula.reaktor.timetable_server.utils.JPAOperations;
 import es.iesjandula.reaktor.timetable_server.utils.StudentOperation;
@@ -132,6 +141,23 @@ public class TimetableRest
 	@Autowired
 	private IVisitasServicioRepository visitasRepo;
 	
+	
+	// --------------------------- JAYDEE
+	@Autowired
+	private IAsignaturaRepository asignaturaRepo;
+	@Autowired
+	private IGrupoRepository grupoRepo;
+	@Autowired
+	private IAulaRepository aulaRepo;
+	@Autowired
+	private IProfesorRepository profesorRepo;
+	@Autowired
+	private ITimeSlotRepository timeSlotRepo;
+	
+	
+	
+	
+	
 	public TimetableRest()
 	{
 		this.util = new TimeTableUtils();
@@ -140,7 +166,13 @@ public class TimetableRest
 	}
 	
 	/**
-	 * Method sendXmlToObjects
+	 * Este metodo parsea el XML que recibe.
+	 * Va por este orden.
+	 * 1- Asignaturas.
+	 * 2- Grupos
+	 * 3- Aulas
+	 * 4- Profes
+	 * 5- Tramos
 	 *
 	 * @param xmlFile
 	 * @return ResponseEntity
@@ -195,9 +227,20 @@ public class TimetableRest
 					// GETTING VALUES OF EACH ASIGNATURA
 					this.gettingValuesOfAsignatura(asignaturasNodeList, asignaturasList);
 					log.info(asignaturasList.toString());
-					asignaturas.setAsignatura(asignaturasList);
-					log.info(asignaturas.toString());
-					datos.setAsignaturas(asignaturas);
+					
+					
+					// Guarrada monumental que guarda asignaturas en BBDD.
+					for ( Asignatura asig : asignaturasList ) {
+						AsignaturaEntity asignaturaEntidad = new AsignaturaEntity();
+						asignaturaEntidad.setAbreviatura(asig.getAbreviatura());
+						asignaturaEntidad.setNombre(asig.getNombre());
+						asignaturaRepo.saveAndFlush(asignaturaEntidad);
+					}
+					
+					// Esto ya no haria falta porque no se usa el objeto en sesion.
+					//asignaturas.setAsignatura(asignaturasList);		
+					//log.info(asignaturas.toString());
+					//datos.setAsignaturas(asignaturas);
 					// --------------------------------------------------------------------------------------------------
 
 					// --- OBJECT GRUPOS ---
@@ -217,9 +260,21 @@ public class TimetableRest
 					// GETTING VALUES OF EACH GRUPO
 					this.gettingValuesOfGrupo(gruposNodeList, gruposList);
 					log.info(gruposList.toString());
-					grupos.setGrupo(gruposList);
-					log.info(grupos.toString());
-					datos.setGrupos(grupos);
+					//grupos.setGrupo(gruposList);
+					//log.info(grupos.toString());
+					//datos.setGrupos(grupos);
+					
+					// Por cada elemento en la lista crea una entidad y la guarda.
+					for ( Grupo grupoParseo : gruposList ) {
+						//instancia
+						GrupoEntity grupoEntity = new GrupoEntity();
+						//Seteo
+						grupoEntity.setAbreviatura(grupoParseo.getAbreviatura());
+						grupoEntity.setNombre(grupoParseo.getNombre());
+						//Guardado 
+						grupoRepo.saveAndFlush(grupoEntity);
+					}
+					
 					// --------------------------------------------------------------------------------------------------
 
 					// --- OBJECT AULAS ---
@@ -237,11 +292,25 @@ public class TimetableRest
 
 					List<Aula> aulasList = new ArrayList<>();
 					// GETTING VALUES OF EACH AULA
-					this.gettingValuesOfAula(aulasNodeList, aulasList);
+					this.gettingValuesOfAula(aulasNodeList, aulasList); 
 					log.info(aulasList.toString());
 					aulas.setAula(aulasList);
 					log.info(aulas.toString());
 					datos.setAulas(aulas);
+					
+					// Por cada elemento en la lista crea una entidad y la guarda.
+					for ( Aula aulaParseo: aulasList ) {
+						//instancia
+						AulaEntity aulaEntity = new AulaEntity();
+						//Seteo
+						aulaEntity.setAbreviatura(aulaParseo.getAbreviatura());
+						aulaEntity.setNombre(aulaParseo.getNombre());
+						//Guardado 
+						aulaRepo.saveAndFlush(aulaEntity);
+					}
+					
+					
+					
 					// --------------------------------------------------------------------------------------------------
 
 					// --- OBJECT PROFESORES ---
@@ -260,10 +329,26 @@ public class TimetableRest
 					List<Profesor> profesoresList = new ArrayList<>();
 					// GETTING VALUES OF EACH PROFESOR
 					this.gettingValuesOfProfesor(profesoresNodeList, profesoresList);
-					log.info(profesoresList.toString());
-					profesores.setProfesor(profesoresList);
-					log.info(profesores.toString());
-					datos.setProfesores(profesores);
+//					log.info(profesoresList.toString());
+//					profesores.setProfesor(profesoresList);
+//					log.info(profesores.toString());
+//					datos.setProfesores(profesores);
+					
+					// Guarrada temporal para almacenar profes en BBDD
+					for ( Profesor profe : profesoresList ) {
+						
+						// Instanciar
+						ProfesorEntity profeEntity = new ProfesorEntity();
+						// Setear
+						profeEntity.setAbreviatura(profe.getAbreviatura());
+						profeEntity.setNombre(profe.getNombre());
+						profeEntity.setPrimerApellido(profe.getPrimerApellido());
+						profeEntity.setSegundoApellido(profe.getSegundoApellido());
+						// Guardar
+						profesorRepo.saveAndFlush(profeEntity);
+						
+					}
+					
 					// --------------------------------------------------------------------------------------------------
 
 					// --- OBJECT TramosHorarios ---
@@ -283,9 +368,20 @@ public class TimetableRest
 					List<TimeSlot> tramosList = new ArrayList<>();
 					// GETTING VALUES OF EACH TRAMO
 					this.gettingValuesOfTramo(tramosHorariosNodeList, tramosList);
-					log.info(tramosList.toString());
-					tramosHorarios.setTramo(tramosList);
-					log.info(tramosHorarios.toString());
+//					log.info(tramosList.toString());
+//					tramosHorarios.setTramo(tramosList);
+//					log.info(tramosHorarios.toString());
+					
+					// Guarrada temporal para parsear los tramos a bbdd.
+					for ( TimeSlot tramo : tramosList ) {
+						TimeSlotEntity tramoEntity = new TimeSlotEntity();
+						tramoEntity.setNumeroTramo(tramo.getNumTr());
+						tramoEntity.setDiaSemanal(tramo.getDayNumber());
+						tramoEntity.setHoraInicio(tramo.getStartHour());
+						tramoEntity.setHoraFin(tramo.getEndHour());
+						timeSlotRepo.saveAndFlush(tramoEntity);
+					}
+					
 					// --------------------------------------------------------------------------------------------------
 					datos.setTramosHorarios(tramosHorarios);
 					// --------------------------------------------------------------------------------------------------
@@ -318,6 +414,9 @@ public class TimetableRest
 					log.info(horarioAsigList.toString());
 					horariosAsignaturas.setHorarioAsig(horarioAsigList);
 					horarios.setHorariosAsignaturas(horariosAsignaturas);
+					
+					//TODO: JAYDEE - INVESTIGAR HORARIOS ASIGNATURA.
+					
 					// --------------------------------------------------------------------------------------------------
 
 					// --- HORARIOS_GRUPOS ONLY ONE ---
