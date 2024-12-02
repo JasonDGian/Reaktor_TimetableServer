@@ -17,6 +17,9 @@ import lombok.NoArgsConstructor;
 public class AulaEntity
 {
 	@Id
+	/** Attribute numIntAu*/
+	private String numIntAu;
+	
 	/** Attribute abreviatura*/
 	private String abreviatura;
 	

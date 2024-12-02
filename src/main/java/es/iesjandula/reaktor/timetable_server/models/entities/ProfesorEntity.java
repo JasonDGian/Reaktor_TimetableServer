@@ -18,6 +18,9 @@ public class ProfesorEntity implements Comparable<ProfesorEntity>
 {
 	
 	@Id
+	/** Attribute numIntPR*/
+	private String numIntPR;
+	
 	private String abreviatura;
 	
 	/** Attribute nombre*/

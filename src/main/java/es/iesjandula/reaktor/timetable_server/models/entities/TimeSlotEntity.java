@@ -20,13 +20,13 @@ public class TimeSlotEntity
 {
 	// Identificador unico de tramo.
 	@Id
-	private String numeroTramo;
+	private String numTr;
 	
-	private String diaSemanal;
+	private String dayNumber;
 	
-	private String horaInicio;
+	private String startHour;
 	
-	private String horaFin;
-	
+	private String endHour;	
 	
 }
+
