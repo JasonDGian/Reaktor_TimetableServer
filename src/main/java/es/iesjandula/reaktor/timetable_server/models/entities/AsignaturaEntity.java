@@ -1,7 +1,7 @@
-package es.iesjandula.reaktor.timetable_server.models.parse;
+package es.iesjandula.reaktor.timetable_server.models.entities;
 
-import es.iesjandula.reaktor.timetable_server.models.entities.ActividadEntity;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,19 +14,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class Asignatura
+public class AsignaturaEntity
 {
 	@Id
 	/** Attribute numIntAs */
 	private String numIntAs;
-
+	
 	/** Attribute abreviatura */
 	private String abreviatura;
 
 	/** Attribute nombre */
 	private String nombre;
-	
-	@OneToMany(mappedBy = "asignaturas")
-	private ActividadEntity actividad;
-	
 }

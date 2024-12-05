@@ -2,9 +2,9 @@ package es.iesjandula.reaktor.timetable_server.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import es.iesjandula.reaktor.timetable_server.models.parse.Aula;
+import es.iesjandula.reaktor.timetable_server.models.entities.AulaEntity;
 
-public interface IAulaRepository extends JpaRepository <Aula, String>
+public interface IAulaRepository extends JpaRepository<AulaEntity, String>
 {
 
 }
