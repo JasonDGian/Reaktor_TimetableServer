@@ -1,5 +1,6 @@
 package es.iesjandula.reaktor.timetable_server.models.parse;
 
+import es.iesjandula.reaktor.timetable_server.models.entities.ProfesorEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,15 @@ public class Profesor implements Comparable<Profesor>
 	
 	/** Attribute segundoApellido*/
 	private String segundoApellido;
+	
+	// Constructore de mapeo.
+	public Profesor ( ProfesorEntity profesorEntidad) {
+		this.abreviatura = profesorEntidad.getAbreviatura();
+		this.numIntPR = profesorEntidad.getNumIntPR();
+		this.nombre = profesorEntidad.getNombre();
+		this.primerApellido = profesorEntidad.getPrimerApellido();
+		this.segundoApellido = profesorEntidad.getSegundoApellido();
+	}
 
 	@Override
 	public int compareTo(Profesor other) {

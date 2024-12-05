@@ -1436,11 +1436,45 @@ public class TimetableRest
 		actividadList.add(newActividad);
 	}
 
+	/**
+	 * Method extracted
+	 *
+	 * @param gruposActividad
+	 * @param node
+	 */
+	private GruposActividad getGruposActividadAttributeTexts(GruposActividad gruposActividad, Node node)
+	{
+		if (node.getNodeName().equals("tot_gr_act"))
+		{
+			gruposActividad.setTotGrAct(node.getTextContent());
+		}
+		if (node.getNodeName().equals("grupo_1"))
+		{
+			gruposActividad.setGrupo1(node.getTextContent());
+		}
+		if (node.getNodeName().equals("grupo_2"))
+		{
+			gruposActividad.setGrupo2(node.getTextContent());
+		}
+		if (node.getNodeName().equals("grupo_3"))
+		{
+			gruposActividad.setGrupo3(node.getTextContent());
+		}
+		if (node.getNodeName().equals("grupo_4"))
+		{
+			gruposActividad.setGrupo4(node.getTextContent());
+		}
+		if (node.getNodeName().equals("grupo_5"))
+		{
+			gruposActividad.setGrupo5(node.getTextContent());
+		}
+		return gruposActividad;
+	}
+	
 	// ------------------ METODOS DE RECUPERACIÓN DE DATOS.
 	
 	/**
-	 * Recupera el listado de profesores.
-	 * 
+	 * Recupera un listado de profesoresDTO a partir de una llamada al repositorio.
 	 * @param session
 	 * @return
 	 */
@@ -1449,8 +1483,7 @@ public class TimetableRest
 	{
 		try
 		{
-			// Llamada a base de datos para recuperar listado de profesores.
-			List<ProfesorEntity> profesores = this.profesorRepo.findAll();
+			List<Profesor> profesores = this.profesorRepo.recuperaListadoProfesores();
 			// Devuelve un listado ordenado de profesores.
 			return ResponseEntity.ok().body(this.util.ordenarLista(profesores));
 			
@@ -1491,41 +1524,6 @@ public class TimetableRest
 	}
 
 	/**
-	 * Method extracted
-	 *
-	 * @param gruposActividad
-	 * @param node
-	 */
-	private GruposActividad getGruposActividadAttributeTexts(GruposActividad gruposActividad, Node node)
-	{
-		if (node.getNodeName().equals("tot_gr_act"))
-		{
-			gruposActividad.setTotGrAct(node.getTextContent());
-		}
-		if (node.getNodeName().equals("grupo_1"))
-		{
-			gruposActividad.setGrupo1(node.getTextContent());
-		}
-		if (node.getNodeName().equals("grupo_2"))
-		{
-			gruposActividad.setGrupo2(node.getTextContent());
-		}
-		if (node.getNodeName().equals("grupo_3"))
-		{
-			gruposActividad.setGrupo3(node.getTextContent());
-		}
-		if (node.getNodeName().equals("grupo_4"))
-		{
-			gruposActividad.setGrupo4(node.getTextContent());
-		}
-		if (node.getNodeName().equals("grupo_5"))
-		{
-			gruposActividad.setGrupo5(node.getTextContent());
-		}
-		return gruposActividad;
-	}
-
-	/**
 	 * Method getListCourse
 	 *
 	 * @param session
@@ -1540,22 +1538,25 @@ public class TimetableRest
 		List<Aula> listaAula = new ArrayList<>();
 		try
 		{
-			// -- GETTING LIST OF AULA IN CENTER ---
-			listaAula = this.centroPdfs.getDatos().getAulas().getAula();
-
-			// -- FOR EAHC AULA IN listAula ---
+			// -- Recupera un listado de aulas (dto) de la base de datos.
+			listaAula = aulaRepo.recuperaListadoAulas();
+			
+			// -- FOR EACH AULA IN listAula ---
 			for (int i = 0; i < listaAula.size(); i++)
 			{
 				if (listaAula.get(i).getAbreviatura().isEmpty() || (listaAula.get(i).getAbreviatura() == null))
 				{
 					continue;
 				}
+				
 				String nombreAula = listaAula.get(i).getNombre();
 
 				String[] plantaAula = listaAula.get(i).getAbreviatura().split("\\.");
 
 				String plantaNumero = "";
+				
 				String numeroAula = "";
+				
 				// -- THE VALUES WITH CHARACTERS ONLY HAVE 1 POSITION ---
 				if (plantaAula.length > 1)
 				{
@@ -1596,18 +1597,26 @@ public class TimetableRest
 	public ResponseEntity<?> getClassroomTeacher(@RequestParam(required = true) String name,
 			@RequestParam(required = true) String lastname, HttpSession session)
 	{
+
 		try
-		{
+		{	// Si el nombre y apellidos no están en blanco.
 			if (!name.isEmpty() && !name.isBlank() && !lastname.isBlank() && !lastname.isEmpty())
 			{
 
-				for (Profesor prof : this.centroPdfs.getDatos().getProfesores().getProfesor())
+				// Recupera listado profesores de BBDD.
+				List<Profesor> profesores = profesorRepo.recuperaListadoProfesores();
+				
+				// Por cada profesor en el listado recuperado.
+				for (Profesor prof : profesores)
 				{
+					// obtiene nombres y apellidos para compara comparacion.
 					String profName = prof.getNombre().trim().toLowerCase();
 					String profLastName = prof.getPrimerApellido().trim().toLowerCase() + " "
 							+ prof.getSegundoApellido().trim().toLowerCase();
 
-					// log.info(prof.toString());
+					log.info(prof.toString());
+
+					// Si el nombre introducido en parametros pertenece al nombre del profesor del a iteración actual.
 					if (profName.equalsIgnoreCase(name.trim()) && profLastName.equalsIgnoreCase(lastname.trim()))
 					{
 						log.info("EXISTE " + prof);
@@ -1616,14 +1625,35 @@ public class TimetableRest
 						String actualTime = LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getMinute();
 						log.info(actualTime);
 
+						// Recupera el tramo equivalente a la hora actual.
 						TimeSlot profTramo = null;
-						profTramo = this.gettingTramoActual(this.centroPdfs, actualTime, profTramo);
+						profTramo = this.gettingTramoActual(actualTime, profTramo);
 
 						// --- IF PROF TRAMO IS NOT NULL ---
 						if (profTramo != null)
 						{
-							for (HorarioProf horarioProf : this.centroPdfs.getHorarios().getHorariosProfesores()
-									.getHorarioProf())
+
+							// Crear la lista de horarioProf desde elementos recuperados en bbdd.
+							List<HorarioProf> listadoHorarios = new ArrayList<>();
+							
+							for ( ProfesorEntity profe : this.profesorRepo.findAll() ) {
+								
+								List<Actividad> actividadesProfesor = actividadRepo.recuperaListadoActividadesProfesor( profe.getNumIntPR());
+								String totAc =  String.valueOf( actividadesProfesor.size() );
+								
+								// Crea nuevo horario profesor.
+								HorarioProf horarioProfe = new HorarioProf();
+								
+								horarioProfe.setActividad( actividadesProfesor );
+								horarioProfe.setHorNumIntPR(profe.getNumIntPR());
+								horarioProfe.setTotUn("0");
+								horarioProfe.setTotAC(totAc);
+								
+								listadoHorarios.add(horarioProfe);
+							}
+							
+							
+							for (HorarioProf horarioProf : listadoHorarios)
 							{
 								if (prof.getNumIntPR().equalsIgnoreCase(horarioProf.getHorNumIntPR()))
 								{
@@ -1655,7 +1685,9 @@ public class TimetableRest
 									{
 										// --- GETTING THE ACTUAL AULA FROM AND GENERATE CLASSROOM ---
 										Aula profAula = null;
-										for (Aula aula : this.centroPdfs.getDatos().getAulas().getAula())
+										List<Aula> aulasList = aulaRepo.recuperaListadoAulas();
+										
+										for (Aula aula : aulasList)
 										{
 											if (aula.getNumIntAu().trim()
 													.equalsIgnoreCase(profActividad.getAula().trim()))
@@ -1672,8 +1704,9 @@ public class TimetableRest
 
 										// --- ASIGNATURA ---
 										Asignatura asignatura = null;
-										for (Asignatura asig : this.centroPdfs.getDatos().getAsignaturas()
-												.getAsignatura())
+										List<Asignatura> asignaturaList = asignaturaRepo.recuperaListadoAsignatura();
+												
+										for (Asignatura asig : asignaturaList )
 										{
 											// --- EQUAL ASIGNATURA ID --
 											if (asig.getNumIntAs().trim()
@@ -2142,25 +2175,12 @@ public class TimetableRest
 
 				// --- CHECK IF THE AULA EXISTS ---
 				Aula aula = null;
-				for (Aula aul : this.centroPdfs.getDatos().getAulas().getAula())
+				
+				// Recupera listado de aulas (clase DTO) de BBDD
+				List<Aula> aulasLista = aulaRepo.recuperaListadoAulas();
+				
+				for (Aula aul : aulasLista)
 				{
-					// --- REPLACE º,'SPACE', - , FOR EMPTY , FROM GRUPO NOMBRE AND GRUPO ABRV ---
-					// --- THIS IS FOR TRY TO GET THE MAX POSIBILITIES OF GET THE AULA FROM CURSO
-					// ---
-
-//						String aulaName = grupo.getNombre().trim().toLowerCase().replace("º", "").replace(" ", "")
-//								.replace("-", "");
-//						String aulaAbr = grupo.getAbreviatura().trim().toLowerCase().replace("º", "")
-//								.replace(" ", "").replace("-", "");
-
-					// --- CHECK IF COURSENAME EXISTS ON THE AULA NAME OR THE COURSE ABRV EXIST ON
-					// THE AULA NAME ---
-//						if (aul.getNombre().trim().toLowerCase().replace("-", "").contains(aulaName)
-//								|| aul.getNombre().trim().toLowerCase().replace("-", "").contains(aulaAbr))
-//						{
-//							// -- IF EXISTS , SET THE VALUE OF AUL (FOREACH) ON AULA ---
-//							aula = aul;
-//						}
 					if (aul.getNombre().equalsIgnoreCase(courseName))
 					{
 						aula = aul;
@@ -3176,9 +3196,12 @@ public class TimetableRest
 	 * @param tramoActual
 	 * @return
 	 */
-	private TimeSlot gettingTramoActual(Centro centro, String actualTime, TimeSlot tramoActual)
+	private TimeSlot gettingTramoActual(String actualTime, TimeSlot tramoActual)
 	{
-		for (TimeSlot tramo : centro.getDatos().getTramosHorarios().getTramo())
+		// Recupera listado de tramos de BBDD
+		List<TimeSlot> tramosLista = timeslotRepo.recuperaListadoTramosHorarios();
+		
+		for (TimeSlot tramo : tramosLista)
 		{
 			int numTr = Integer.parseInt(tramo.getNumTr());
 

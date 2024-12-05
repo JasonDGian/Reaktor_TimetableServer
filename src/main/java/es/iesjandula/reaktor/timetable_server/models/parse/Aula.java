@@ -1,5 +1,6 @@
 package es.iesjandula.reaktor.timetable_server.models.parse;
 
+import es.iesjandula.reaktor.timetable_server.models.entities.AulaEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -25,5 +26,11 @@ public class Aula
 	
 	/** Attribute nombre*/
 	private String nombre;
+	
+	public Aula( AulaEntity aulaEntidad ) {
+		this.numIntAu = aulaEntidad.getNumIntAu();
+		this.abreviatura = aulaEntidad.getAbreviatura();
+		this.nombre = aulaEntidad.getNombre();
+	}
 
 }
