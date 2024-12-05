@@ -3607,10 +3607,8 @@ public class TimetableRest
 	{
 		try
 		{
-
-			List<Grupo> grupos = new LinkedList<Grupo>();
-
-			grupos = this.centroPdfs.getDatos().getGrupos().getGrupo();
+			// Crea una lista vacia de grupos.
+			List<Grupo> grupos = grupoRepo.recuperaGruposDeParseo();
 
 			return ResponseEntity.ok().body(this.util.ordenarLista(grupos));
 		} catch (Exception exception)
@@ -3623,7 +3621,6 @@ public class TimetableRest
 			// (INTERNAL SERVER ERROR) --
 			return ResponseEntity.status(500).body(horariosError);
 		}
-
 	}
 
 	@RequestMapping(value = "/send/csv-alumnos", consumes = "multipart/form-data")

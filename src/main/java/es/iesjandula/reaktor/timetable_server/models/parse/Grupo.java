@@ -1,5 +1,6 @@
 package es.iesjandula.reaktor.timetable_server.models.parse;
 
+import es.iesjandula.reaktor.timetable_server.models.entities.GrupoEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -30,6 +31,12 @@ public class Grupo implements Comparable<Grupo>
 	public int compareTo(Grupo other) {
 
 		return this.nombre.compareTo(other.nombre);
+	}
+	
+	public Grupo ( GrupoEntity grupoEntidad) {
+		this.abreviatura = grupoEntidad.getAbreviatura();
+		this.nombre = grupoEntidad.getNombre();
+		this.numIntGr = grupoEntidad.getNumIntGr();
 	}
 	
 	
