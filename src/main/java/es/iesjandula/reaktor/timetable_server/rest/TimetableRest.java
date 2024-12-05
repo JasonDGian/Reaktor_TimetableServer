@@ -614,7 +614,7 @@ public class TimetableRest
 		this.asignaturaRepo.saveAllAndFlush(listadoAsignaturas);
 	}
 
-	// ---------------- METODOS PARA ALMACENAR HORARIOS.
+	// ---------------- METODOS PARA ALMACENAR HORARIOS EN BBDD.
 	
 	/**
 	 * Autor: David Jason G.
@@ -835,8 +835,6 @@ public class TimetableRest
 			// GETTING THE ACTIVIDAD NODE LIST
 			NodeList actividadNodeList = horarioGrupElement.getElementsByTagName("ACTIVIDAD");
 
-			String grupoId = horarioGrupNodeList.item(i).getAttributes().item(0).getTextContent();
-
 			for (int j = 0; j < actividadNodeList.getLength(); j++)
 			{
 				ActividadEntity actividadEntity = new ActividadEntity();
@@ -972,7 +970,6 @@ public class TimetableRest
 		}
 	}
 	
-	
 	private void saveValuesOfHorarioProf(NodeList horarioProfNodeList) throws Exception
 	{
 		// Por cada elemento en el nodelist.
@@ -1043,58 +1040,111 @@ public class TimetableRest
 		}
 	}
 
-	
-	// ------------------ METODOS DE RECUPERACIÓN DE DATOS.
+	// --------------------  METODOS DE ALMACENAMIENTO EN SESION.
 	
 	/**
-	 * Recupera el listado de profesores.
-	 * 
-	 * @param session
-	 * @return
+	 * Method gettingValuesOfTramo
+	 *
+	 * @param tramosHorariosNodeList
+	 * @param tramosList
 	 */
-	@RequestMapping(value = "/get/teachers", produces = "application/json")
-	public ResponseEntity<?> getProfesores(HttpSession session)
+	private void gettingValuesOfTramo(NodeList tramosHorariosNodeList, List<TimeSlot> tramosList)
 	{
-		try
+		for (int i = 0; i < tramosHorariosNodeList.getLength(); i++)
 		{
-			// Llamada a base de datos para recuperar listado de profesores.
-			List<ProfesorEntity> profesores = this.profesorRepo.findAll();
-			// Devuelve un listado ordenado de profesores.
-			return ResponseEntity.ok().body(this.util.ordenarLista(profesores));
-			
-		} catch (Exception exception)
-		{
-			String error = "Server Error";
-			HorariosError horariosError = new HorariosError(500, error, exception);
-			log.error(error, exception);
-			return ResponseEntity.status(500).body(horariosError);
+			TimeSlot newTramo = new TimeSlot();
+			newTramo.setEndHour(tramosHorariosNodeList.item(i).getAttributes().item(0).getTextContent());
+			newTramo.setStartHour(tramosHorariosNodeList.item(i).getAttributes().item(1).getTextContent());
+			newTramo.setDayNumber(tramosHorariosNodeList.item(i).getAttributes().item(3).getTextContent());
+			newTramo.setNumTr(tramosHorariosNodeList.item(i).getAttributes().item(2).getTextContent());
+
+			tramosList.add(newTramo);
 		}
 	}
 
 	/**
-	 * Method getListStudentsAlphabetically
+	 * Method gettingValuesOfProfesor
 	 *
-	 * @return
+	 * @param profesoresNodeList
+	 * @param profesoresList
 	 */
-	@RequestMapping(value = "/get/sortstudents", produces = "application/json")
-	public ResponseEntity<?> getListStudentsAlphabetically()
+	private void gettingValuesOfProfesor(NodeList profesoresNodeList, List<Profesor> profesoresList)
 	{
-		try
+		for (int i = 0; i < profesoresNodeList.getLength(); i++)
 		{
-			if (this.students.isEmpty())
-			{
-				HorariosError error = new HorariosError(400, "No se han cargado estudiantes");
-				return ResponseEntity.status(404).body(error.toMap());
-			}
+			Profesor newProfesor = new Profesor();
+			newProfesor.setAbreviatura(profesoresNodeList.item(i).getAttributes().item(0).getTextContent());
+			newProfesor.setNumIntPR(profesoresNodeList.item(i).getAttributes().item(2).getTextContent());
 
-			return ResponseEntity.ok().body(this.util.ordenarLista(this.students));
-		} catch (Exception exception)
+			// --- GETTING FULL NAME ---
+			String nombreCompleto = profesoresNodeList.item(i).getAttributes().item(1).getTextContent();
+			String[] nombreCompletoSpit = nombreCompleto.split(",");
+			// --- GETING LASTNAME ---
+			String[] apellidosSplit = nombreCompletoSpit[0].split(" ");
+
+			/// --- SETTING VALUES ---
+			newProfesor.setNombre(nombreCompletoSpit[nombreCompletoSpit.length - 1].trim());
+			newProfesor.setPrimerApellido(apellidosSplit[0].trim());
+			newProfesor.setSegundoApellido(apellidosSplit[1].trim());
+
+			profesoresList.add(newProfesor);
+		}
+	}
+
+	/**
+	 * Method gettingValuesOfAula
+	 *
+	 * @param aulasNodeList
+	 * @param aulasList
+	 */
+	private void gettingValuesOfAula(NodeList aulasNodeList, List<Aula> aulasList)
+	{
+		for (int i = 0; i < aulasNodeList.getLength(); i++)
 		{
-			// -- CATCH ANY ERROR ---
-			String error = "Server Error";
-			HorariosError horariosError = new HorariosError(500, error, exception);
-			log.error(error, exception);
-			return ResponseEntity.status(500).body(horariosError);
+			Aula newAula = new Aula();
+			newAula.setAbreviatura(aulasNodeList.item(i).getAttributes().item(0).getTextContent());
+			newAula.setNumIntAu(aulasNodeList.item(i).getAttributes().item(2).getTextContent());
+			newAula.setNombre(aulasNodeList.item(i).getAttributes().item(1).getTextContent());
+
+			aulasList.add(newAula);
+		}
+	}
+
+	/**
+	 * Method gettingValuesOfGrupo
+	 *
+	 * @param gruposNodeList
+	 * @param gruposList
+	 */
+	private void gettingValuesOfGrupo(NodeList gruposNodeList, List<Grupo> gruposList)
+	{
+		for (int i = 0; i < gruposNodeList.getLength(); i++)
+		{
+			Grupo newGrupo = new Grupo();
+			newGrupo.setAbreviatura(gruposNodeList.item(i).getAttributes().item(0).getTextContent());
+			newGrupo.setNumIntGr(gruposNodeList.item(i).getAttributes().item(2).getTextContent());
+			newGrupo.setNombre(gruposNodeList.item(i).getAttributes().item(1).getTextContent());
+
+			gruposList.add(newGrupo);
+		}
+	}
+
+	/**
+	 * Method gettingValuesOfAsignatura
+	 *
+	 * @param asignaturasNodeList
+	 * @param asignaturasList
+	 */
+	private void gettingValuesOfAsignatura(NodeList asignaturasNodeList, List<Asignatura> asignaturasList)
+	{
+		for (int i = 0; i < asignaturasNodeList.getLength(); i++)
+		{
+			Asignatura newAsignatura = new Asignatura();
+			newAsignatura.setAbreviatura(asignaturasNodeList.item(i).getAttributes().item(0).getTextContent());
+			newAsignatura.setNumIntAs(asignaturasNodeList.item(i).getAttributes().item(2).getTextContent());
+			newAsignatura.setNombre(asignaturasNodeList.item(i).getAttributes().item(1).getTextContent());
+
+			asignaturasList.add(newAsignatura);
 		}
 	}
 
@@ -1386,109 +1436,57 @@ public class TimetableRest
 		actividadList.add(newActividad);
 	}
 
+	// ------------------ METODOS DE RECUPERACIÓN DE DATOS.
+	
 	/**
-	 * Method gettingValuesOfTramo
-	 *
-	 * @param tramosHorariosNodeList
-	 * @param tramosList
+	 * Recupera el listado de profesores.
+	 * 
+	 * @param session
+	 * @return
 	 */
-	private void gettingValuesOfTramo(NodeList tramosHorariosNodeList, List<TimeSlot> tramosList)
+	@RequestMapping(value = "/get/teachers", produces = "application/json")
+	public ResponseEntity<?> getProfesores(HttpSession session)
 	{
-		for (int i = 0; i < tramosHorariosNodeList.getLength(); i++)
+		try
 		{
-			TimeSlot newTramo = new TimeSlot();
-			newTramo.setEndHour(tramosHorariosNodeList.item(i).getAttributes().item(0).getTextContent());
-			newTramo.setStartHour(tramosHorariosNodeList.item(i).getAttributes().item(1).getTextContent());
-			newTramo.setDayNumber(tramosHorariosNodeList.item(i).getAttributes().item(3).getTextContent());
-			newTramo.setNumTr(tramosHorariosNodeList.item(i).getAttributes().item(2).getTextContent());
-
-			tramosList.add(newTramo);
+			// Llamada a base de datos para recuperar listado de profesores.
+			List<ProfesorEntity> profesores = this.profesorRepo.findAll();
+			// Devuelve un listado ordenado de profesores.
+			return ResponseEntity.ok().body(this.util.ordenarLista(profesores));
+			
+		} catch (Exception exception)
+		{
+			String error = "Server Error";
+			HorariosError horariosError = new HorariosError(500, error, exception);
+			log.error(error, exception);
+			return ResponseEntity.status(500).body(horariosError);
 		}
 	}
 
 	/**
-	 * Method gettingValuesOfProfesor
+	 * Method getListStudentsAlphabetically
 	 *
-	 * @param profesoresNodeList
-	 * @param profesoresList
+	 * @return
 	 */
-	private void gettingValuesOfProfesor(NodeList profesoresNodeList, List<Profesor> profesoresList)
+	@RequestMapping(value = "/get/sortstudents", produces = "application/json")
+	public ResponseEntity<?> getListStudentsAlphabetically()
 	{
-		for (int i = 0; i < profesoresNodeList.getLength(); i++)
+		try
 		{
-			Profesor newProfesor = new Profesor();
-			newProfesor.setAbreviatura(profesoresNodeList.item(i).getAttributes().item(0).getTextContent());
-			newProfesor.setNumIntPR(profesoresNodeList.item(i).getAttributes().item(2).getTextContent());
+			if (this.students.isEmpty())
+			{
+				HorariosError error = new HorariosError(400, "No se han cargado estudiantes");
+				return ResponseEntity.status(404).body(error.toMap());
+			}
 
-			// --- GETTING FULL NAME ---
-			String nombreCompleto = profesoresNodeList.item(i).getAttributes().item(1).getTextContent();
-			String[] nombreCompletoSpit = nombreCompleto.split(",");
-			// --- GETING LASTNAME ---
-			String[] apellidosSplit = nombreCompletoSpit[0].split(" ");
-
-			/// --- SETTING VALUES ---
-			newProfesor.setNombre(nombreCompletoSpit[nombreCompletoSpit.length - 1].trim());
-			newProfesor.setPrimerApellido(apellidosSplit[0].trim());
-			newProfesor.setSegundoApellido(apellidosSplit[1].trim());
-
-			profesoresList.add(newProfesor);
-		}
-	}
-
-	/**
-	 * Method gettingValuesOfAula
-	 *
-	 * @param aulasNodeList
-	 * @param aulasList
-	 */
-	private void gettingValuesOfAula(NodeList aulasNodeList, List<Aula> aulasList)
-	{
-		for (int i = 0; i < aulasNodeList.getLength(); i++)
+			return ResponseEntity.ok().body(this.util.ordenarLista(this.students));
+		} catch (Exception exception)
 		{
-			Aula newAula = new Aula();
-			newAula.setAbreviatura(aulasNodeList.item(i).getAttributes().item(0).getTextContent());
-			newAula.setNumIntAu(aulasNodeList.item(i).getAttributes().item(2).getTextContent());
-			newAula.setNombre(aulasNodeList.item(i).getAttributes().item(1).getTextContent());
-
-			aulasList.add(newAula);
-		}
-	}
-
-	/**
-	 * Method gettingValuesOfGrupo
-	 *
-	 * @param gruposNodeList
-	 * @param gruposList
-	 */
-	private void gettingValuesOfGrupo(NodeList gruposNodeList, List<Grupo> gruposList)
-	{
-		for (int i = 0; i < gruposNodeList.getLength(); i++)
-		{
-			Grupo newGrupo = new Grupo();
-			newGrupo.setAbreviatura(gruposNodeList.item(i).getAttributes().item(0).getTextContent());
-			newGrupo.setNumIntGr(gruposNodeList.item(i).getAttributes().item(2).getTextContent());
-			newGrupo.setNombre(gruposNodeList.item(i).getAttributes().item(1).getTextContent());
-
-			gruposList.add(newGrupo);
-		}
-	}
-
-	/**
-	 * Method gettingValuesOfAsignatura
-	 *
-	 * @param asignaturasNodeList
-	 * @param asignaturasList
-	 */
-	private void gettingValuesOfAsignatura(NodeList asignaturasNodeList, List<Asignatura> asignaturasList)
-	{
-		for (int i = 0; i < asignaturasNodeList.getLength(); i++)
-		{
-			Asignatura newAsignatura = new Asignatura();
-			newAsignatura.setAbreviatura(asignaturasNodeList.item(i).getAttributes().item(0).getTextContent());
-			newAsignatura.setNumIntAs(asignaturasNodeList.item(i).getAttributes().item(2).getTextContent());
-			newAsignatura.setNombre(asignaturasNodeList.item(i).getAttributes().item(1).getTextContent());
-
-			asignaturasList.add(newAsignatura);
+			// -- CATCH ANY ERROR ---
+			String error = "Server Error";
+			HorariosError horariosError = new HorariosError(500, error, exception);
+			log.error(error, exception);
+			return ResponseEntity.status(500).body(horariosError);
 		}
 	}
 

@@ -13,10 +13,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
 public class Asignatura
 {
-	@Id
 	/** Attribute numIntAs */
 	private String numIntAs;
 
