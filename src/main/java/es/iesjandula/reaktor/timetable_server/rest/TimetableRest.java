@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -314,52 +315,52 @@ public class TimetableRest
 
 					// --------------------------------------------------------------------------------------------------
 
-					// HORARIO GRUPOS
-					log.info("- Almacenando datos de Horarios Grupo -");
+//					// HORARIO GRUPOS
+//					log.info("- Almacenando datos de Horarios Grupo -");
+//
+//					// Recupera elemento de NODO padre de HORARIO GRUPOS.
+//					Element horariosGruposElement = (Element) horariosElement.getElementsByTagName("HORARIOS_GRUPOS")
+//							.item(0);
+//
+//					// Recupera listado de nodos HORARIOS GRUPOS.
+//					NodeList horarioGrupNodeList = horariosGruposElement.getElementsByTagName("HORARIO_GRUP");
+//
+//					// Almacena en BBDD el los valores listados en la lista de nodos XML.
+//					this.saveValuesOfHorarioGrup(horarioGrupNodeList);
+//					log.info("Horarios Grupo almacenados en BBDD: {}", horarioGrupNodeList.getLength());
+//
+//					// --------------------------------------------------------------------------------------------------
+//
+//					// HORARIOS AULA
+//					log.info("- Almacenando datos de Horarios Aula -");
+//
+//					// Recupera elemento de NODO padre de HORARIO AULAS.
+//					Element horariosAulasElement = (Element) horariosElement.getElementsByTagName("HORARIOS_AULAS")
+//							.item(0);
+//
+//					// Recupera listado de nodos HORARIOS AULA.
+//					NodeList horarioAulaNodeList = horariosAulasElement.getElementsByTagName("HORARIO_AULA");
+//					
+//					// Almacena en BBDD el los valores listados en la lista de nodos XML.
+//					this.saveValuesOfHorarioAula(horarioAulaNodeList);
+//					log.info("Horarios Profesores almacenados en BBDD: {}", horarioAulaNodeList.getLength());
+//					
+//					// --------------------------------------------------------------------------------------------------
+//
+//					// --- HORARIOS PROFESORES
+//					log.info("- Almacenando datos de Horarios Profesores -");
+//					
+//					// Recupera elemento de NODO padre de HORARIO PROFESORES.
+//					Element horariosProfesoresElement = (Element) horariosElement
+//							.getElementsByTagName("HORARIOS_PROFESORES").item(0);
+//
+//					// Recupera listado de nodos HORARIOS PROFESOR.
+//					NodeList horarioProfNodeList = horariosProfesoresElement.getElementsByTagName("HORARIO_PROF");
+//
+//					// Almacena en BBDD el los valores listados en la lista de nodos XML.
+//					this.saveValuesOfHorarioProf(horarioProfNodeList);
+//					log.info("Horarios Profesores almacenados en BBDD: {}", horarioProfNodeList.getLength());
 
-					// Recupera elemento de NODO padre de HORARIO GRUPOS.
-					Element horariosGruposElement = (Element) horariosElement.getElementsByTagName("HORARIOS_GRUPOS")
-							.item(0);
-
-					// Recupera listado de nodos HORARIOS GRUPOS.
-					NodeList horarioGrupNodeList = horariosGruposElement.getElementsByTagName("HORARIO_GRUP");
-
-					// Almacena en BBDD el los valores listados en la lista de nodos XML.
-					this.saveValuesOfHorarioGrup(horarioGrupNodeList);
-					log.info("Horarios Grupo almacenados en BBDD: {}", horarioGrupNodeList.getLength());
-
-					// --------------------------------------------------------------------------------------------------
-
-					// HORARIOS AULA
-					log.info("- Almacenando datos de Horarios Aula -");
-
-					// Recupera elemento de NODO padre de HORARIO AULAS.
-					Element horariosAulasElement = (Element) horariosElement.getElementsByTagName("HORARIOS_AULAS")
-							.item(0);
-
-					// Recupera listado de nodos HORARIOS AULA.
-					NodeList horarioAulaNodeList = horariosAulasElement.getElementsByTagName("HORARIO_AULA");
-					
-					// Almacena en BBDD el los valores listados en la lista de nodos XML.
-					this.saveValuesOfHorarioAula(horarioAulaNodeList);
-					log.info("Horarios Profesores almacenados en BBDD: {}", horarioAulaNodeList.getLength());
-					
-					// --------------------------------------------------------------------------------------------------
-
-					// --- HORARIOS PROFESORES
-					log.info("- Almacenando datos de Horarios Profesores -");
-					
-					// Recupera elemento de NODO padre de HORARIO PROFESORES.
-					Element horariosProfesoresElement = (Element) horariosElement
-							.getElementsByTagName("HORARIOS_PROFESORES").item(0);
-
-					// Recupera listado de nodos HORARIOS PROFESOR.
-					NodeList horarioProfNodeList = horariosProfesoresElement.getElementsByTagName("HORARIO_PROF");
-
-					// Almacena en BBDD el los valores listados en la lista de nodos XML.
-					this.saveValuesOfHorarioProf(horarioProfNodeList);
-					log.info("Horarios Profesores almacenados en BBDD: {}", horarioProfNodeList.getLength());
-					
 					// -------------------------------------------------------------------------------------------------------------------------------------------------
 
 					// -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -615,29 +616,41 @@ public class TimetableRest
 	}
 
 	// ---------------- METODOS PARA ALMACENAR HORARIOS EN BBDD.
-	
+
 	/**
 	 * Autor: David Jason G.
 	 * 
-	 * Procesa y guarda una actividad asociada a cada grupo presente en un mapa de nodos.
+	 * Procesa y guarda una actividad asociada a cada grupo presente en un mapa de
+	 * nodos.
 	 * 
-	 * @param actividadEntity la entidad de la actividad que será asociada a los grupos.
-	 * @param gruposActividadNodeMap un mapa de nodos que contiene los grupos relacionados con la actividad.
-	 *                                Cada nodo representa un grupo único.
+	 * @param actividadEntity        la entidad de la actividad que será asociada a
+	 *                               los grupos.
+	 * @param gruposActividadNodeMap un mapa de nodos que contiene los grupos
+	 *                               relacionados con la actividad. Cada nodo
+	 *                               representa un grupo único.
 	 * 
-	 * <p>Funcionamiento:</p>
-	 * <ul>
-	 *     <li>Itera sobre cada nodo del mapa de grupos de actividad.</li>
-	 *     <li>Para cada nodo:
-	 *         <ul>
-	 *             <li>Obtiene la información del grupo.</li>
-	 *             <li>Asocia la actividad al grupo mediante el método {@link #saveActividadWithGroup(Node, ActividadEntity)}.</li>
-	 *         </ul>
-	 *     </li>
-	 * </ul>
+	 *                               <p>
+	 *                               Funcionamiento:
+	 *                               </p>
+	 *                               <ul>
+	 *                               <li>Itera sobre cada nodo del mapa de grupos de
+	 *                               actividad.</li>
+	 *                               <li>Para cada nodo:
+	 *                               <ul>
+	 *                               <li>Obtiene la información del grupo.</li>
+	 *                               <li>Asocia la actividad al grupo mediante el
+	 *                               método
+	 *                               {@link #saveActividadWithGroup(Node, ActividadEntity)}.</li>
+	 *                               </ul>
+	 *                               </li>
+	 *                               </ul>
 	 * 
-	 * <p>Este método garantiza que una entrada de actividad sea creada para cada grupo asociado,
-	 * preservando la relación entre actividades y grupos.</p>
+	 *                               <p>
+	 *                               Este método garantiza que una entrada de
+	 *                               actividad sea creada para cada grupo asociado,
+	 *                               preservando la relación entre actividades y
+	 *                               grupos.
+	 *                               </p>
 	 * 
 	 * @see ActividadEntity
 	 * @see #saveActividadWithGroup(Node, ActividadEntity)
@@ -658,25 +671,42 @@ public class TimetableRest
 	/**
 	 * Autor: David Jason G.
 	 * 
-	 * Asocia una actividad a un grupo específico y guarda la relación en la base de datos.
+	 * Asocia una actividad a un grupo específico y guarda la relación en la base de
+	 * datos.
 	 * 
-	 * @param node el nodo XML que representa un grupo. Su contenido debe incluir el identificador del grupo.
+	 * @param node            el nodo XML que representa un grupo. Su contenido debe
+	 *                        incluir el identificador del grupo.
 	 * @param actividadEntity la entidad de actividad que será asociada al grupo.
 	 * 
-	 * <p>Funcionamiento:</p>
-	 * <ul>
-	 *     <li>Verifica si el nombre del nodo contiene la palabra clave "grupo_".</li>
-	 *     <li>Recupera el identificador del grupo desde el contenido del nodo.</li>
-	 *     <li>Busca en el repositorio la entidad {@link GrupoEntity} correspondiente al identificador.</li>
-	 *     <li>Asocia la entidad del grupo a la actividad mediante {@link ActividadEntity#setGrupo(GrupoEntity)}.</li>
-	 *     <li>Guarda la actividad actualizada en la base de datos utilizando el repositorio de actividades.</li>
-	 *     <li>Registra la operación mediante un mensaje de depuración.</li>
-	 * </ul>
+	 *                        <p>
+	 *                        Funcionamiento:
+	 *                        </p>
+	 *                        <ul>
+	 *                        <li>Verifica si el nombre del nodo contiene la palabra
+	 *                        clave "grupo_".</li>
+	 *                        <li>Recupera el identificador del grupo desde el
+	 *                        contenido del nodo.</li>
+	 *                        <li>Busca en el repositorio la entidad
+	 *                        {@link GrupoEntity} correspondiente al
+	 *                        identificador.</li>
+	 *                        <li>Asocia la entidad del grupo a la actividad
+	 *                        mediante
+	 *                        {@link ActividadEntity#setGrupo(GrupoEntity)}.</li>
+	 *                        <li>Guarda la actividad actualizada en la base de
+	 *                        datos utilizando el repositorio de actividades.</li>
+	 *                        <li>Registra la operación mediante un mensaje de
+	 *                        depuración.</li>
+	 *                        </ul>
 	 * 
-	 * <p><strong>Nota:</strong> Este método crea una nueva entrada de actividad para cada grupo asociado.
-	 * Esto reemplaza la lógica anterior de reutilizar una actividad única con múltiples referencias a grupos.</p>
+	 *                        <p>
+	 *                        <strong>Nota:</strong> Este método crea una nueva
+	 *                        entrada de actividad para cada grupo asociado. Esto
+	 *                        reemplaza la lógica anterior de reutilizar una
+	 *                        actividad única con múltiples referencias a grupos.
+	 *                        </p>
 	 * 
-	 * @throws NoSuchElementException si no se encuentra el grupo en el repositorio {@code grupoRepo}.
+	 * @throws NoSuchElementException si no se encuentra el grupo en el repositorio
+	 *                                {@code grupoRepo}.
 	 * 
 	 * @see ActividadEntity
 	 * @see GrupoEntity
@@ -697,44 +727,57 @@ public class TimetableRest
 
 			// Guarda en base de datos.
 			this.actividadRepo.saveAndFlush(actividadEntity);
-			log.debug( "Grupo asignado a actividad: {}" , nuevoGrupo.toString() );
+			log.debug("Grupo asignado a actividad: {}", nuevoGrupo.toString());
 		}
 	}
-	
+
 	/**
 	 * Autor: David Jason G.
 	 * 
 	 * Procesa una lista de nodos XML que representan horarios de asignaturas,
-	 * recupera datos de las actividades asociadas y las guarda en la base de datos 
+	 * recupera datos de las actividades asociadas y las guarda en la base de datos
 	 * (SOLO ALMACENA REGISTROS DE LA ACTIVIDAD).
 	 *
-	 * @param horarioAsigNodeList una lista de nodos XML que representan horarios de asignaturas.
-	 *                            Cada nodo debe contener datos de actividades asociadas.
-	 * @throws Exception si ocurre un error durante el procesamiento, como la falta de una entidad
-	 *                   requerida (Asignatura, Aula, Profesor o Tramo) en la base de datos.
+	 * @param horarioAsigNodeList una lista de nodos XML que representan horarios de
+	 *                            asignaturas. Cada nodo debe contener datos de
+	 *                            actividades asociadas.
+	 * @throws Exception si ocurre un error durante el procesamiento, como la falta
+	 *                   de una entidad requerida (Asignatura, Aula, Profesor o
+	 *                   Tramo) en la base de datos.
 	 *
-	 * <p>Funcionamiento:</p>
-	 * <ul>
-	 *     <li>Por cada nodo en la lista de horarios de asignaturas:</li>
-	 *     <ul>
-	 *         <li>Obtiene los nodos de actividades asociadas al horario de asignatura.</li>
-	 *         <li>Por cada actividad encontrada:</li>
-	 *         <ul>
-	 *             <li>Crea una instancia de {@link ActividadEntity} y asigna sus atributos
-	 *                 basándose en la información de los nodos XML y los repositorios.</li>
-	 *             <li>Recupera entidades relacionadas (Aula, Profesor, Tramo, Asignatura)
-	 *                 y las asigna a la actividad. Lanza una excepción si alguna de estas entidades
-	 *                 no se encuentra en la base de datos.</li>
-	 *             <li>Obtiene los datos de los grupos asociados a la actividad y utiliza
-	 *                 el método {@link #saveValuesOfGruposActividadAttrs(ActividadEntity, NamedNodeMap)}
-	 *                 para procesarlos.</li>
-	 *         </ul>
-	 *     </ul>
-	 * </ul>
+	 *                   <p>
+	 *                   Funcionamiento:
+	 *                   </p>
+	 *                   <ul>
+	 *                   <li>Por cada nodo en la lista de horarios de
+	 *                   asignaturas:</li>
+	 *                   <ul>
+	 *                   <li>Obtiene los nodos de actividades asociadas al horario
+	 *                   de asignatura.</li>
+	 *                   <li>Por cada actividad encontrada:</li>
+	 *                   <ul>
+	 *                   <li>Crea una instancia de {@link ActividadEntity} y asigna
+	 *                   sus atributos basándose en la información de los nodos XML
+	 *                   y los repositorios.</li>
+	 *                   <li>Recupera entidades relacionadas (Aula, Profesor, Tramo,
+	 *                   Asignatura) y las asigna a la actividad. Lanza una
+	 *                   excepción si alguna de estas entidades no se encuentra en
+	 *                   la base de datos.</li>
+	 *                   <li>Obtiene los datos de los grupos asociados a la
+	 *                   actividad y utiliza el método
+	 *                   {@link #saveValuesOfGruposActividadAttrs(ActividadEntity, NamedNodeMap)}
+	 *                   para procesarlos.</li>
+	 *                   </ul>
+	 *                   </ul>
+	 *                   </ul>
 	 *
-	 * <p><strong>Nota:</strong> Las entidades relacionadas son críticas para completar el
-	 * registro de la actividad. Si alguna de ellas no está presente en la base de datos,
-	 * el método lanza una excepción para garantizar la integridad de los datos.</p>
+	 *                   <p>
+	 *                   <strong>Nota:</strong> Las entidades relacionadas son
+	 *                   críticas para completar el registro de la actividad. Si
+	 *                   alguna de ellas no está presente en la base de datos, el
+	 *                   método lanza una excepción para garantizar la integridad de
+	 *                   los datos.
+	 *                   </p>
 	 *
 	 * @see ActividadEntity
 	 * @see AsignaturaEntity
@@ -823,7 +866,7 @@ public class TimetableRest
 
 		}
 	}
-	
+
 	private void saveValuesOfHorarioGrup(NodeList horarioGrupNodeList) throws Exception
 	{
 		// Por cada horario de grupo en el nodo.
@@ -843,13 +886,13 @@ public class TimetableRest
 				String tramoId = actividadNodeList.item(j).getAttributes().item(5).getTextContent();
 				String profeId = actividadNodeList.item(j).getAttributes().item(4).getTextContent();
 				String asignaturaId = actividadNodeList.item(j).getAttributes().item(0).getTextContent();
-				
+
 				// Recupera entidades.
-				Optional <AulaEntity> aula = aulaRepo.findById(aulaId);
-				Optional <TimeSlotEntity> tramo = timeslotRepo.findById(tramoId);
-				Optional <ProfesorEntity> profesor = profesorRepo.findById(profeId);
-				Optional <AsignaturaEntity> asignatura = asignaturaRepo.findById(asignaturaId);
-				
+				Optional<AulaEntity> aula = aulaRepo.findById(aulaId);
+				Optional<TimeSlotEntity> tramo = timeslotRepo.findById(tramoId);
+				Optional<ProfesorEntity> profesor = profesorRepo.findById(profeId);
+				Optional<AsignaturaEntity> asignatura = asignaturaRepo.findById(asignaturaId);
+
 				// Bloque de control que levanta error si alguna entidad es nula (no se
 				// encuentra en bbdd.)
 				if (asignatura.isEmpty())
@@ -868,12 +911,11 @@ public class TimetableRest
 				{
 					throw new Exception("Objeto Tramo en saveValuesOfHorarioAula es nulo.");
 				}
-				
-				
+
 				// Configura atributos planos.
 				actividadEntity.setNumAct(actividadNodeList.item(j).getAttributes().item(2).getTextContent());
 				actividadEntity.setNumUn(actividadNodeList.item(j).getAttributes().item(3).getTextContent());
-				
+
 				// Configura atributos entidad.
 				actividadEntity.setAula(aula.get());
 				actividadEntity.setTramo(tramo.get());
@@ -969,7 +1011,7 @@ public class TimetableRest
 			}
 		}
 	}
-	
+
 	private void saveValuesOfHorarioProf(NodeList horarioProfNodeList) throws Exception
 	{
 		// Por cada elemento en el nodelist.
@@ -977,7 +1019,7 @@ public class TimetableRest
 		{
 			// Identificador de profesor recuperado en nodo padre.
 			String idProfe = horarioProfNodeList.item(i).getAttributes().item(0).getTextContent();
-			
+
 			// Recupera datos de la actividad.
 			Element horarioProfElement = (Element) horarioProfNodeList.item(i);
 			NodeList actividadNodeList = horarioProfElement.getElementsByTagName("ACTIVIDAD");
@@ -986,14 +1028,14 @@ public class TimetableRest
 			{
 				// Crea nueva entidad.
 				ActividadEntity actividadEntity = new ActividadEntity();
-				
+
 				// Recupera entidades interesadas.
 				String idAsignatura = actividadNodeList.item(j).getAttributes().item(0).getTextContent();
 				String idTramo = actividadNodeList.item(j).getAttributes().item(4).getTextContent();
 				String idAula = actividadNodeList.item(j).getAttributes().item(1).getTextContent();
 				String numAct = actividadNodeList.item(j).getAttributes().item(2).getTextContent();
 				String numUn = actividadNodeList.item(j).getAttributes().item(3).getTextContent();
-				
+
 				// Recupera las entidades objetivo.
 				Optional<AsignaturaEntity> asignatura = asignaturaRepo.findById(idAsignatura);
 				Optional<AulaEntity> aula = aulaRepo.findById(idAula);
@@ -1018,19 +1060,20 @@ public class TimetableRest
 				{
 					throw new Exception("Objeto Tramo en saveValuesOfHorarioAula es nulo.");
 				}
-				
+
 				// Configura atributos planos o simples (String o Integer)
 				actividadEntity.setNumAct(numAct);
 				actividadEntity.setNumUn(numUn);
-				
+
 				// Configura entidad de actividad.
 				actividadEntity.setProfesor(profesor.get());
 				actividadEntity.setAsignatura(asignatura.get());
 				actividadEntity.setAula(aula.get());
 				actividadEntity.setTramo(tramo.get());
-				
+
 				// Recupera el listado de grupos de la actividad.
-				NamedNodeMap gruposActividadNodeMap = ((Element) actividadNodeList.item(j)).getElementsByTagName("GRUPOS_ACTIVIDAD").item(0).getAttributes();
+				NamedNodeMap gruposActividadNodeMap = ((Element) actividadNodeList.item(j))
+						.getElementsByTagName("GRUPOS_ACTIVIDAD").item(0).getAttributes();
 
 				// Metodo que almacenar en base de datos un registro por cada grupo asociado a
 				// la actividad.
@@ -1040,8 +1083,8 @@ public class TimetableRest
 		}
 	}
 
-	// --------------------  METODOS DE ALMACENAMIENTO EN SESION.
-	
+	// -------------------- METODOS DE ALMACENAMIENTO EN SESION.
+
 	/**
 	 * Method gettingValuesOfTramo
 	 *
@@ -1241,6 +1284,7 @@ public class TimetableRest
 			horarioAulaList.add(newHorarioAula);
 		}
 	}
+
 	/**
 	 * Method gettingValuesOfHorarioGrup
 	 *
@@ -1470,11 +1514,82 @@ public class TimetableRest
 		}
 		return gruposActividad;
 	}
-	
+
 	// ------------------ METODOS DE RECUPERACIÓN DE DATOS.
-	
+
+	// Metodo de utilidad para rellenar el listado de horarios profesor.
+	public void fillHorarioProfValues(List<HorarioProf> listadoHorarios)
+	{
+		// Por cada profesor en el listado de profesores almacenado en bbdd.
+		for (ProfesorEntity profe : this.profesorRepo.findAll())
+		{
+
+			List<Actividad> actividadesList = actividadRepo.recuperaListadoActividades();
+			String totAc = String.valueOf(actividadesList.size());
+
+			// Crea nuevo horario profesor.
+			HorarioProf horarioProfe = new HorarioProf();
+
+			// Rellena datos.
+			horarioProfe.setActividad(actividadesList);
+			horarioProfe.setHorNumIntPR(profe.getNumIntPR());
+			horarioProfe.setTotUn("0"); // Revisar.
+			horarioProfe.setTotAC(totAc);
+
+			// Agrega el horario del profesor al listado.
+			listadoHorarios.add(horarioProfe);
+		}
+	}
+
+	public void fillHorarioProfValuesById(List<HorarioProf> listadoHorarios, String profesorId)
+	{
+
+		// List<Actividad> actividadesList = actividadRepo.recuperaListadoActividades();
+		List<Actividad> actividadesList = actividadRepo.recuperaListadoActividadesPorIdProfesor(profesorId);
+
+		String totAc = String.valueOf(actividadesList.size());
+
+		// Crea nuevo horario profesor.
+		HorarioProf horarioProfe = new HorarioProf();
+
+		// Rellena datos.
+		horarioProfe.setActividad(actividadesList);
+		horarioProfe.setHorNumIntPR(profesorId);
+		horarioProfe.setTotUn("0"); // Revisar.
+		horarioProfe.setTotAC(totAc);
+
+		// Agrega el horario del profesor al listado.
+		listadoHorarios.add(horarioProfe);
+
+	}
+
+	// Metodo de utilidad para rellenar el listado de horarios grupo.
+	public void fillHorarioGrupoValues(List<HorarioGrup> listadoHorariosGrupo)
+	{
+		for (GrupoEntity grupo : this.grupoRepo.findAll())
+		{
+
+			List<Actividad> listadoActividades = actividadRepo.recuperaListadoActividades();
+
+			String totAc = String.valueOf(listadoActividades.size());
+
+			// Crea nuevo horario profesor.
+			HorarioGrup horarioGrupo = new HorarioGrup();
+
+			// Rellena datos.
+			horarioGrupo.setActividad(listadoActividades);
+			horarioGrupo.setHorNumIntGr(grupo.getNumIntGr());
+			horarioGrupo.setTotAC(totAc);
+			horarioGrupo.setTotUn("0"); // REVISAR
+
+			// Agrega el horario del grupo al listado.
+			listadoHorariosGrupo.add(horarioGrupo);
+		}
+	}
+
 	/**
 	 * Recupera un listado de profesoresDTO a partir de una llamada al repositorio.
+	 * 
 	 * @param session
 	 * @return
 	 */
@@ -1486,7 +1601,7 @@ public class TimetableRest
 			List<Profesor> profesores = this.profesorRepo.recuperaListadoProfesores();
 			// Devuelve un listado ordenado de profesores.
 			return ResponseEntity.ok().body(this.util.ordenarLista(profesores));
-			
+
 		} catch (Exception exception)
 		{
 			String error = "Server Error";
@@ -1496,6 +1611,7 @@ public class TimetableRest
 		}
 	}
 
+// depende de carga de fichero csv.
 	/**
 	 * Method getListStudentsAlphabetically
 	 *
@@ -1513,6 +1629,7 @@ public class TimetableRest
 			}
 
 			return ResponseEntity.ok().body(this.util.ordenarLista(this.students));
+
 		} catch (Exception exception)
 		{
 			// -- CATCH ANY ERROR ---
@@ -1540,7 +1657,7 @@ public class TimetableRest
 		{
 			// -- Recupera un listado de aulas (dto) de la base de datos.
 			listaAula = aulaRepo.recuperaListadoAulas();
-			
+
 			// -- FOR EACH AULA IN listAula ---
 			for (int i = 0; i < listaAula.size(); i++)
 			{
@@ -1548,15 +1665,15 @@ public class TimetableRest
 				{
 					continue;
 				}
-				
+
 				String nombreAula = listaAula.get(i).getNombre();
 
 				String[] plantaAula = listaAula.get(i).getAbreviatura().split("\\.");
 
 				String plantaNumero = "";
-				
+
 				String numeroAula = "";
-				
+
 				// -- THE VALUES WITH CHARACTERS ONLY HAVE 1 POSITION ---
 				if (plantaAula.length > 1)
 				{
@@ -1597,185 +1714,110 @@ public class TimetableRest
 	public ResponseEntity<?> getClassroomTeacher(@RequestParam(required = true) String name,
 			@RequestParam(required = true) String lastname, HttpSession session)
 	{
-
 		try
-		{	// Si el nombre y apellidos no están en blanco.
+		{ // Si el nombre y apellidos no están en blanco.
 			if (!name.isEmpty() && !name.isBlank() && !lastname.isBlank() && !lastname.isEmpty())
 			{
+				// Recoge el parametro y lo separa en campos.
+				String[] apellidos = lastname.trim().split(" ");
 
-				// Recupera listado profesores de BBDD.
-				List<Profesor> profesores = profesorRepo.recuperaListadoProfesores();
-				
-				// Por cada profesor en el listado recuperado.
-				for (Profesor prof : profesores)
+				String nombreProfesor = name;
+				String primerApellido = apellidos[0]; // Asigna el primer apellido retomando el primer campo.
+				String segundoApellido = apellidos[1]; // Asigna el segundo apellido retomando el segundo campo.
+
+				// Recupera al objeto referente al docente buscado.
+				Optional<Profesor> profesorOpt = this.profesorRepo.buscaProfesorPorNombreYApellidos(nombreProfesor,
+						primerApellido, segundoApellido);
+
+				if (profesorOpt.isEmpty())
 				{
-					// obtiene nombres y apellidos para compara comparacion.
-					String profName = prof.getNombre().trim().toLowerCase();
-					String profLastName = prof.getPrimerApellido().trim().toLowerCase() + " "
-							+ prof.getSegundoApellido().trim().toLowerCase();
+					// --- ERROR ---
+					String error = "Error on search terms";
+					HorariosError horariosError = new HorariosError(400, error, null);
+					log.info(error, horariosError);
+					return ResponseEntity.status(400).body(horariosError);
+				}
 
-					log.info(prof.toString());
+				// PROFESOR
+				Profesor profesor = profesorOpt.get();
+				log.info(" - - - - Profesor encontrado {}", profesor.getAbreviatura());
 
-					// Si el nombre introducido en parametros pertenece al nombre del profesor del a iteración actual.
-					if (profName.equalsIgnoreCase(name.trim()) && profLastName.equalsIgnoreCase(lastname.trim()))
+				// HORA ACTUAL
+				String currentTime = LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getMinute();
+				log.info(" - - - - Hora recuperada {}.", currentTime);
+
+				// TRAMO RELATIVO HORA ACTUAL
+				TimeSlot profTramo = null;
+				profTramo = this.gettingTramoActual(currentTime, profTramo);
+				log.info(" - - - - Tramo recuperado {}.", profTramo.getNumTr());
+
+				// Busca una actividad basandose en un tramo horario y en un profesor. (Un
+				// profesor solo puede estar en una actividad en un momento dado.)
+				Optional<ActividadEntity> actividadProfesor = this.actividadRepo
+						.buscaActividadEntityPorTramoYProfesor(profTramo.getNumTr(), profesor.getNumIntPR());
+
+				if (actividadProfesor.isEmpty())
+				{
+					// --- ERROR ---
+					String error = "No activity for searched professor";
+					HorariosError horariosError = new HorariosError(400, error, null);
+					log.info(error, horariosError);
+					return ResponseEntity.status(400).body(horariosError);
+				}
+
+				// Recupera el aula relacionada a la actividad del profesor.
+				Aula profAula = new Aula();
+
+				profAula.setAbreviatura(actividadProfesor.get().getAula().getAbreviatura());
+				profAula.setNombre(actividadProfesor.get().getAula().getNombre());
+				profAula.setNumIntAu(actividadProfesor.get().getAula().getNumIntAu());
+
+				log.info(" - - - - Aula recuperada: {}", profAula.getAbreviatura());
+
+				Asignatura asignatura = new Asignatura(actividadProfesor.get().getAsignatura());
+				log.info(" - - - - Asignatura recuperada: {}", asignatura.getAbreviatura());
+
+				log.info("AULA ACTUAL PROFESOR: " + profesor + "\n" + profAula);
+				String nombreAula = profAula.getNombre();
+
+				String[] plantaAula = profAula.getAbreviatura().split("\\.");
+				log.debug(" - - - - Planta Aula : {}", plantaAula);
+
+				String plantaNumero = "";
+				log.debug(" - - - - Planta Numero : {}", plantaNumero);
+
+				String numeroAula = "";
+				log.debug(" - - - - Numero Aula : {}", numeroAula);
+
+				// -- THE VALUES WITH CHARACTERS ONLY HAVE 1 POSITION ---
+				if (plantaAula.length > 1)
+				{
+					plantaNumero = plantaAula[0].trim();
+					numeroAula = plantaAula[1].trim();
+				} else
+				{
+					plantaNumero = plantaAula[0].trim();
+					numeroAula = plantaAula[0].trim();
+					if (plantaNumero.isEmpty() || numeroAula.isEmpty())
 					{
-						log.info("EXISTE " + prof);
-
-						// Getting the actual time
-						String actualTime = LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getMinute();
-						log.info(actualTime);
-
-						// Recupera el tramo equivalente a la hora actual.
-						TimeSlot profTramo = null;
-						profTramo = this.gettingTramoActual(actualTime, profTramo);
-
-						// --- IF PROF TRAMO IS NOT NULL ---
-						if (profTramo != null)
-						{
-
-							// Crear la lista de horarioProf desde elementos recuperados en bbdd.
-							List<HorarioProf> listadoHorarios = new ArrayList<>();
-							
-							for ( ProfesorEntity profe : this.profesorRepo.findAll() ) {
-								
-								List<Actividad> actividadesProfesor = actividadRepo.recuperaListadoActividadesProfesor( profe.getNumIntPR());
-								String totAc =  String.valueOf( actividadesProfesor.size() );
-								
-								// Crea nuevo horario profesor.
-								HorarioProf horarioProfe = new HorarioProf();
-								
-								horarioProfe.setActividad( actividadesProfesor );
-								horarioProfe.setHorNumIntPR(profe.getNumIntPR());
-								horarioProfe.setTotUn("0");
-								horarioProfe.setTotAC(totAc);
-								
-								listadoHorarios.add(horarioProfe);
-							}
-							
-							
-							for (HorarioProf horarioProf : listadoHorarios)
-							{
-								if (prof.getNumIntPR().equalsIgnoreCase(horarioProf.getHorNumIntPR()))
-								{
-									log.info("ENCONTRADO HORARIO PROF-> " + horarioProf);
-
-									Actividad profActividad = null;
-									for (Actividad actividad : horarioProf.getActividad())
-									{
-										if (actividad.getTramo().trim().equalsIgnoreCase(profTramo.getNumTr().trim()))
-										{
-											log.info("ENCONTRADO ACTIVIDAD -> " + actividad);
-											profActividad = actividad;
-
-											// --- LEAVING ACTIVIDAD FOR EACH ---
-											break;
-										}
-									}
-									if (profActividad == null)
-									{
-										log.info("EL TRAMO " + profTramo
-												+ "\nNO EXISTE EN LAS ACTIVIDADES DEL PROFESOR " + prof);
-										// --- ERROR ---
-										String info = "El profesor no se encuentra en ningun aula";
-										return ResponseEntity.ok().body(info);
-									}
-
-									// --- IF PROF ACTIVIAD IS NOT NULL ---
-									if (profActividad != null)
-									{
-										// --- GETTING THE ACTUAL AULA FROM AND GENERATE CLASSROOM ---
-										Aula profAula = null;
-										List<Aula> aulasList = aulaRepo.recuperaListadoAulas();
-										
-										for (Aula aula : aulasList)
-										{
-											if (aula.getNumIntAu().trim()
-													.equalsIgnoreCase(profActividad.getAula().trim()))
-											{
-												log.info("AULA ENCONTRADA PARA LA ACTIVIDAD --> " + profActividad + "\n"
-														+ aula);
-												// --- SETTING THE AULA VALUE TO PROF AULA ---
-												profAula = aula;
-
-												// --- LEAVING AULA FOR EACH ---
-												break;
-											}
-										}
-
-										// --- ASIGNATURA ---
-										Asignatura asignatura = null;
-										List<Asignatura> asignaturaList = asignaturaRepo.recuperaListadoAsignatura();
-												
-										for (Asignatura asig : asignaturaList )
-										{
-											// --- EQUAL ASIGNATURA ID --
-											if (asig.getNumIntAs().trim()
-													.equalsIgnoreCase(profActividad.getAsignatura().trim()))
-											{
-												asignatura = asig;
-											}
-										}
-
-										if (profAula != null)
-										{
-											log.info("AULA ACTUAL PROFESOR: " + prof + "\n" + profAula);
-											String nombreAula = profAula.getNombre();
-
-											String[] plantaAula = profAula.getAbreviatura().split("\\.");
-
-											String plantaNumero = "";
-											String numeroAula = "";
-
-											// -- THE VALUES WITH CHARACTERS ONLY HAVE 1 POSITION ---
-											if (plantaAula.length > 1)
-											{
-												plantaNumero = plantaAula[0].trim();
-												numeroAula = plantaAula[1].trim();
-											} else
-											{
-												plantaNumero = plantaAula[0].trim();
-												numeroAula = plantaAula[0].trim();
-												if (plantaNumero.isEmpty() || numeroAula.isEmpty())
-												{
-													plantaNumero = nombreAula;
-													numeroAula = nombreAula;
-												}
-											}
-
-											Map<String, Object> mapa = new HashMap<String, Object>();
-											Classroom classroom = new Classroom(numeroAula, plantaNumero,
-													profAula.getNombre());
-											mapa.put("classroom", classroom);
-											mapa.put("subject", asignatura);
-											log.info(mapa.toString());
-											return ResponseEntity.ok().body(mapa);
-										}
-									}
-
-									// --- LEAVING PROFTRAMO FOREACH ---
-									break;
-								}
-							}
-							// --- LEAVING PROF FOREACH ---
-							break;
-						} else
-						{
-							// --- ERROR ---
-							LocalDateTime dateTime = LocalDateTime.now();
-							String error = "Tramo no encontrado para fecha actual: " + dateTime + " ";
-							HorariosError horariosError = new HorariosError(400, error, null);
-							log.info(error, horariosError);
-							return ResponseEntity.ok().body(horariosError);
-						}
+						plantaNumero = nombreAula;
+						numeroAula = nombreAula;
 					}
 				}
-			}
 
+				Map<String, Object> mapa = new HashMap<String, Object>();
+				Classroom classroom = new Classroom(numeroAula, plantaNumero, profAula.getNombre());
+				mapa.put("classroom", classroom);
+				mapa.put("subject", asignatura);
+				log.info(mapa.toString());
+				return ResponseEntity.ok().body(mapa);
+			}
 			// --- ERROR ---
 			String error = "Error on parameters from header";
 			HorariosError horariosError = new HorariosError(500, error, null);
 			log.info(error, horariosError);
 			return ResponseEntity.status(400).body(horariosError);
+
 		} catch (Exception exception)
 		{
 			// -- CATCH ANY ERROR ---
@@ -1801,152 +1843,103 @@ public class TimetableRest
 		try
 		{
 			log.info(profTime.toString());
+
+			// Si el nombre y el apellido NO SON NULOS.
 			if (!name.isEmpty() && !name.isBlank() && !lastname.isBlank() && !lastname.isEmpty())
 			{
-				for (Profesor prof : this.centroPdfs.getDatos().getProfesores().getProfesor())
+
+				String nombre = name;
+				String apellidos[] = lastname.trim().split(" ");
+				String apellido1 = apellidos[0];
+				String apellido2 = apellidos[1];
+
+				Optional<Profesor> profesorOpt = this.profesorRepo.buscaProfesorPorNombreYApellidos(nombre, apellido1,
+						apellido2);
+
+				if (profesorOpt.isEmpty())
 				{
-					String profName = prof.getNombre().trim().toLowerCase();
-					String profLastName = prof.getPrimerApellido().trim().toLowerCase() + " "
-							+ prof.getSegundoApellido().trim().toLowerCase();
+					// alzar error profesor no encontrado.
 
-					log.info(prof.toString());
-					if (profName.equalsIgnoreCase(name.trim()) && profLastName.equalsIgnoreCase(lastname.trim()))
+				}
+
+				Profesor prof = profesorOpt.get();
+				log.info("Profesor recuperado: {}", prof.getAbreviatura());
+
+				// Recupera una actividad filtrando por tramo y profesor pasados por parametro.
+				Optional<ActividadEntity> actividadTramoProfesor = this.actividadRepo
+						.buscaActividadEntityPorTramoYProfesor(profTime.getNumTr().trim(), prof.getNumIntPR());
+
+				if (actividadTramoProfesor.isEmpty())
+				{
+					// lanzar error de que no tiene cosas ccon esa hora.
+					log.info("EL TRAMO " + profTime + "\nNO EXISTE EN LAS ACTIVIDADES DEL PROFESOR " + prof);
+					// --- ERROR ---
+					String error = "EL TRAMO " + profTime + "\nNO EXISTE EN LAS ACTIVIDADES DEL PROFESOR " + prof;
+					HorariosError horariosError = new HorariosError(500, error, null);
+					log.info(error, horariosError);
+					return ResponseEntity.ok().body("El profesor en el tramo " + profTime.getStartHour() + " - "
+							+ profTime.getEndHour() + " no se encuentra en ningun aula");
+				}
+
+				AulaEntity aulaEntity = actividadTramoProfesor.get().getAula();
+				AsignaturaEntity asignaturaEntity = actividadTramoProfesor.get().getAsignatura();
+
+				Aula aulaProfe = new Aula();
+				// sete atributos aula
+				aulaProfe.setAbreviatura(aulaEntity.getAbreviatura());
+				aulaProfe.setNombre(aulaEntity.getNombre());
+				aulaProfe.setNumIntAu(aulaEntity.getNumIntAu());
+
+				Asignatura asignaturaProfe = new Asignatura();
+				// setea atributos asignatura.
+				asignaturaProfe.setAbreviatura(asignaturaEntity.getAbreviatura());
+				asignaturaProfe.setNombre(asignaturaEntity.getNombre());
+				asignaturaProfe.setNumIntAs(asignaturaEntity.getNumIntAs());
+
+				// Si aula profe es nula.
+				if (aulaProfe != null)
+				{
+					log.info("AULA ACTUAL PROFESOR: " + prof + "\n" + aulaProfe);
+					String nombreAula = aulaProfe.getNombre();
+
+					String[] plantaAula = aulaProfe.getAbreviatura().split("\\.");
+					String plantaNumero = "";
+					String numeroAula = "";
+
+					// -- THE VALUES WITH CHARACTERS ONLY HAVE 1 POSITION ---
+					if (plantaAula.length > 1)
 					{
-						log.info("EXISTE " + prof);
-
-						// Getting the actual time
-						String actualTime = LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getMinute();
-						log.info(actualTime);
-
-						// --- IF PROF TRAMO IS NOT NULL ---
-						if (profTime != null)
+						plantaNumero = plantaAula[0].trim();
+						numeroAula = plantaAula[1].trim();
+					} else
+					{
+						plantaNumero = plantaAula[0].trim();
+						numeroAula = plantaAula[0].trim();
+						if (plantaNumero.isEmpty() || numeroAula.isEmpty())
 						{
-							for (HorarioProf horarioProf : this.centroPdfs.getHorarios().getHorariosProfesores()
-									.getHorarioProf())
-							{
-								if (prof.getNumIntPR().equalsIgnoreCase(horarioProf.getHorNumIntPR()))
-								{
-									log.info("ENCONTRADO HORARIO PROF-> " + horarioProf);
-
-									Actividad profActividad = null;
-									for (Actividad actividad : horarioProf.getActividad())
-									{
-										if (actividad.getTramo().trim().equalsIgnoreCase(profTime.getNumTr().trim()))
-										{
-											log.info("ENCONTRADO ACTIVIDAD -> " + actividad);
-											profActividad = actividad;
-
-											// --- LEAVING ACTIVIDAD FOR EACH ---
-											break;
-										}
-									}
-									if (profActividad == null)
-									{
-										log.info("EL TRAMO " + profTime + "\nNO EXISTE EN LAS ACTIVIDADES DEL PROFESOR "
-												+ prof);
-										// --- ERROR ---
-										String error = "EL TRAMO " + profTime
-												+ "\nNO EXISTE EN LAS ACTIVIDADES DEL PROFESOR " + prof;
-										HorariosError horariosError = new HorariosError(500, error, null);
-										log.info(error, horariosError);
-										return ResponseEntity.ok()
-												.body("El profesor en el tramo " + profTime.getStartHour() + " - "
-														+ profTime.getEndHour() + " no se encuentra en ningun aula");
-									}
-
-									// --- IF PROF ACTIVIAD IS NOT NULL ---
-									if (profActividad != null)
-									{
-										// --- GETTING THE ACTUAL AULA FROM AND GENERATE CLASSROOM ---
-										Aula profAula = null;
-										for (Aula aula : this.centroPdfs.getDatos().getAulas().getAula())
-										{
-											if (aula.getNumIntAu().trim()
-													.equalsIgnoreCase(profActividad.getAula().trim()))
-											{
-												log.info("AULA ENCONTRADA PARA LA ACTIVIDAD --> " + profActividad + "\n"
-														+ aula);
-												// --- SETTING THE AULA VALUE TO PROF AULA ---
-												profAula = aula;
-
-												// --- LEAVING AULA FOR EACH ---
-												break;
-											}
-										}
-
-										// --- ASIGNATURA ---
-										Asignatura asignatura = null;
-										for (Asignatura asig : this.centroPdfs.getDatos().getAsignaturas()
-												.getAsignatura())
-										{
-											// --- EQUAL ASIGNATURA ID --
-											if (asig.getNumIntAs().trim()
-													.equalsIgnoreCase(profActividad.getAsignatura().trim()))
-											{
-												asignatura = asig;
-											}
-										}
-
-										if (profAula != null)
-										{
-											log.info("AULA ACTUAL PROFESOR: " + prof + "\n" + profAula);
-											String nombreAula = profAula.getNombre();
-
-											String[] plantaAula = profAula.getAbreviatura().split("\\.");
-
-											String plantaNumero = "";
-											String numeroAula = "";
-
-											// -- THE VALUES WITH CHARACTERS ONLY HAVE 1 POSITION ---
-											if (plantaAula.length > 1)
-											{
-												plantaNumero = plantaAula[0].trim();
-												numeroAula = plantaAula[1].trim();
-											} else
-											{
-												plantaNumero = plantaAula[0].trim();
-												numeroAula = plantaAula[0].trim();
-												if (plantaNumero.isEmpty() || numeroAula.isEmpty())
-												{
-													plantaNumero = nombreAula;
-													numeroAula = nombreAula;
-												}
-											}
-											Map<String, Object> mapa = new HashMap<String, Object>();
-											Classroom classroom = new Classroom(numeroAula, plantaNumero,
-													profAula.getNombre());
-											mapa.put("classroom", classroom);
-											mapa.put("subject", asignatura);
-											log.info(mapa.toString());
-
-											return ResponseEntity.ok().body(mapa);
-										}
-									}
-
-									// --- LEAVING PROFTRAMO FOREACH ---
-									break;
-								}
-							}
-							// --- LEAVING PROF FOREACH ---
-							break;
-						} else
-						{
-							// --- ERROR ---
-							String error = "Tramo introducido null" + profTime;
-							HorariosError horariosError = new HorariosError(400, error, null);
-							log.info(error, horariosError);
-							return ResponseEntity.status(400).body(horariosError);
+							plantaNumero = nombreAula;
+							numeroAula = nombreAula;
 						}
 					}
+
+					Map<String, Object> mapa = new HashMap<String, Object>();
+					Classroom classroom = new Classroom(numeroAula, plantaNumero, aulaProfe.getNombre());
+					mapa.put("classroom", classroom);
+					mapa.put("subject", asignaturaProfe);
+					log.info(mapa.toString());
+
+					return ResponseEntity.ok().body(mapa); // respuesta del metodo.
 				}
 			}
-
 			// --- ERROR ---
 			String error = "Error on parameters from header";
 			HorariosError horariosError = new HorariosError(500, error, null);
 			log.info(error, horariosError);
 			return ResponseEntity.status(400).body(horariosError);
-		} catch (Exception exception)
+
+		} catch (
+
+		Exception exception)
 		{
 			// -- CATCH ANY ERROR ---
 			String error = "Server Error";
@@ -1972,7 +1965,10 @@ public class TimetableRest
 
 				// --- IF EXIST THE COURSE ---
 				Grupo grup = null;
-				for (Grupo grupo : this.centroPdfs.getDatos().getGrupos().getGrupo())
+
+				List<Grupo> listadoGrupos = this.grupoRepo.recuperaGruposDeParseo();
+
+				for (Grupo grupo : listadoGrupos)
 				{
 					if (grupo.getNombre().trim().equalsIgnoreCase(courseName.trim()))
 					{
@@ -1989,7 +1985,7 @@ public class TimetableRest
 					String actualTime = LocalDateTime.now().getHour() + ":" + LocalDateTime.now().getMinute();
 					log.info(actualTime);
 
-					acutalTramo = this.gettingTramoActual(this.centroPdfs, actualTime, acutalTramo);
+					acutalTramo = this.gettingTramoActual(actualTime, acutalTramo);
 
 					// --- CHECKING IF THE TRAMO ACTUAL EXISTS ---
 					if (acutalTramo != null)
@@ -1998,8 +1994,12 @@ public class TimetableRest
 
 						// --- NOW GETTING THE HORARIO GRUP , WITH THE SAME ID OF THE GROUP ---
 						HorarioGrup horario = null;
-						for (HorarioGrup horarioGrup : this.centroPdfs.getHorarios().getHorariosGrupos()
-								.getHorarioGrup())
+
+						List<HorarioGrup> listadoHorariosGrupo = new ArrayList<>();
+
+						this.fillHorarioGrupoValues(listadoHorariosGrupo);
+
+						for (HorarioGrup horarioGrup : listadoHorariosGrupo)
 						{
 							// --- EQUAL IDS ---
 							if (horarioGrup.getHorNumIntGr().trim().equalsIgnoreCase(grup.getNumIntGr().trim()))
@@ -2031,7 +2031,10 @@ public class TimetableRest
 
 								// --- PROFESOR ---
 								Profesor profesor = null;
-								for (Profesor prof : this.centroPdfs.getDatos().getProfesores().getProfesor())
+
+								List<Profesor> listadoProfesores = this.profesorRepo.recuperaListadoProfesores();
+
+								for (Profesor prof : listadoProfesores)
 								{
 									// --- EQUAL PROFESSOR ID --
 									if (prof.getNumIntPR().trim().equalsIgnoreCase(activ.getProfesor().trim()))
@@ -2042,7 +2045,10 @@ public class TimetableRest
 
 								// --- ASIGNATURA ---
 								Asignatura asignatura = null;
-								for (Asignatura asig : this.centroPdfs.getDatos().getAsignaturas().getAsignatura())
+
+								List<Asignatura> listadoAsignaturas = this.asignaturaRepo.recuperaListadoAsignatura();
+
+								for (Asignatura asig : listadoAsignaturas)
 								{
 									// --- EQUAL ASIGNATURA ID --
 									if (asig.getNumIntAs().trim().equalsIgnoreCase(activ.getAsignatura().trim()))
@@ -2069,8 +2075,9 @@ public class TimetableRest
 									// --- setting asignatura name ---
 									teacherMoment.setSubject(asignatura.getNombre().trim());
 
-									Classroom clase = this.util.searchClassroom(activ.getAula(),
-											this.centroPdfs.getDatos().getAulas().getAula());
+									List<Aula> listadoAulas = this.aulaRepo.recuperaListadoAulas();
+
+									Classroom clase = this.util.searchClassroom(activ.getAula(), listadoAulas);
 									teacherMoment.setClassroom(clase);
 
 									// --- RETURN THE THEACER MOMENT , WIOUTH CLASSROOM ---
@@ -2175,10 +2182,10 @@ public class TimetableRest
 
 				// --- CHECK IF THE AULA EXISTS ---
 				Aula aula = null;
-				
+
 				// Recupera listado de aulas (clase DTO) de BBDD
 				List<Aula> aulasLista = aulaRepo.recuperaListadoAulas();
-				
+
 				for (Aula aul : aulasLista)
 				{
 					if (aul.getNombre().equalsIgnoreCase(courseName))
@@ -3200,7 +3207,7 @@ public class TimetableRest
 	{
 		// Recupera listado de tramos de BBDD
 		List<TimeSlot> tramosLista = timeslotRepo.recuperaListadoTramosHorarios();
-		
+
 		for (TimeSlot tramo : tramosLista)
 		{
 			int numTr = Integer.parseInt(tramo.getNumTr());
