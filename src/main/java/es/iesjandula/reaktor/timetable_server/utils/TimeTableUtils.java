@@ -22,6 +22,7 @@ import es.iesjandula.reaktor.timetable_server.models.Classroom;
 import es.iesjandula.reaktor.timetable_server.models.Student;
 import es.iesjandula.reaktor.timetable_server.models.User;
 import es.iesjandula.reaktor.timetable_server.models.Visitas;
+import es.iesjandula.reaktor.timetable_server.models.entities.GrupoEntity;
 import es.iesjandula.reaktor.timetable_server.models.parse.Actividad;
 import es.iesjandula.reaktor.timetable_server.models.parse.Asignatura;
 import es.iesjandula.reaktor.timetable_server.models.parse.Aula;
@@ -891,75 +892,77 @@ public class TimeTableUtils
 		}
 	}
 	
-	public String parseStudentGroup (String group, List<Grupo> grupos) throws HorariosError
+	public String parseStudentGroup(String group, List<GrupoEntity> grupos) throws HorariosError 
 	{
-		String grupoFinal = "";
-		int index = 0;
-		boolean out = false;
-		while(index<grupos.size() && !out)
-		{
-			Grupo grupo = grupos.get(index);
-			
-			if(grupo.getNombre().equals("GRecr") || grupo.getNombre().equals("Guardia Biblioteca") || grupo.getNombre().equals("Guardias"))
-			{
-				index++;
-				continue;
-			}
-			//Para el caso de bachillerato que se forma de BHCS (Bachillerato ciencias sociales) o
-			//BCT (Bachillerato Ciencias Tecnologicas) o BC (Bachillerato) se aplicara un filtro especial
-			//Para recoger solo esos alumnos
-			String grupoEspecial = this.getAlumnosBach(grupo.getNombre());
-			
-			//Existen casos que no se pueden trasndformar de forma general por ejemplo 2º ESO-C-BILING.
-			//se aplica un filtro especial para recoger solo esos alumnos
-			grupoEspecial = grupoEspecial.isEmpty() ? this.getSpecialGroup(grupo.getNombre()) : grupoEspecial;
-			
-			if(grupoEspecial.isEmpty())
-			{
-				//Obtenemos el grado del curso en caso de que este vacio lanzamos un error
-				String grade = getGroupGrade(grupo.getNombre());
-				
-				if(grade.isEmpty())
-				{
-					throw new HorariosError(400,"El curso seleccionado "+group+" no coincide con ningun curso de los datos generales");
-				}
-				
-				//Tranformamos los grupos del xml a los grupos de los alumnos del csv
-				String grupoAlumno = this.transformGroup(grupo.getNombre());
-				
-				//Letra del grupo, puede venir vacia (2 DAM, 2 FPB, etc)
-				String letraGrupo = this.getGroupLetter(grupo.getNombre());
-				
-				//Grupo completo
-				String grupoCompleto = grade+" "+grupoAlumno+" "+letraGrupo;
-				
-				grupoCompleto = grupoCompleto.trim();
-				
-				if(grupoCompleto.equals(group))
-				{
-					grupoFinal = grupo.getNombre();
-					out = true;
-				}
-			}
-			else
-			{
-				//Busqueda de los alumnos
-				if(grupoEspecial.equals(group))
-				{
-					grupoFinal = grupo.getNombre();
-					out = true;
-				}
-			}
-			
-			index++;
-		}
-		if(grupoFinal.isEmpty())
-		{
-			throw new HorariosError(404,"No se ha podido encontrar ningun curso en los datos generales con este valor "+group);
-		}
-		
-		return grupoFinal;
-		
+	    // Esta variable almacenará el grupo final una vez que lo encontremos.
+	    String grupoFinal = "";
+
+	    // Usaremos este índice para recorrer la lista de grupos.
+	    int index = 0;
+
+	    // Esto nos ayudará a salir del bucle cuando encontremos el grupo que buscamos.
+	    boolean out = false;
+
+	    // Recorremos la lista de grupos hasta que encontremos el correcto o terminemos de procesarlos.
+	    while (index < grupos.size() && !out) 
+	    {
+	        // Obtenemos el grupo actual de la lista.
+	        GrupoEntity grupo = grupos.get(index);
+
+	        // **Casos especiales**: 
+	        // Hay ciertos grupos que necesitan un tratamiento diferente. 
+	        // Por ejemplo, grupos de Bachillerato o aquellos que tienen nombres especiales.
+	        String grupoEspecial = this.getAlumnosBach(grupo.getNombre());
+
+	        // Si no es un caso especial de Bachillerato, verificamos si pertenece a otro grupo especial.
+	        grupoEspecial = grupoEspecial.isEmpty() ? this.getSpecialGroup(grupo.getNombre()) : grupoEspecial;
+
+	        // Si no es un caso especial, seguimos con la transformación general del nombre del grupo.
+	        if (grupoEspecial.isEmpty()) 
+	        {
+	            // Obtenemos el "grado" del curso (por ejemplo, "1º", "2º", "3º").
+	            String grade = getGroupGrade(grupo.getNombre());
+
+	            // Si no podemos determinar el grado, lanzamos un error porque el grupo no es válido.
+	            if (grade.isEmpty()) {
+	                throw new HorariosError(400, "El curso seleccionado " + group + " no coincide con ningún curso válido");
+	            }
+
+	            // Transformamos el nombre del grupo en un formato más estándar (por ejemplo, de "ESO-A" a "ESO").
+	            String grupoAlumno = this.transformGroup(grupo.getNombre());
+
+	            // Obtenemos la letra del grupo (por ejemplo, "A", "B", "C").
+	            String letraGrupo = this.getGroupLetter(grupo.getNombre());
+
+	            // Construimos el nombre completo del grupo (por ejemplo, "1º ESO A").
+	            String grupoCompleto = (grade + " " + grupoAlumno + " " + letraGrupo).trim();
+
+	            // Si el nombre completo coincide con el grupo que buscamos, lo guardamos y salimos del bucle.
+	            if (grupoCompleto.equals(group)) 
+	            {
+	                grupoFinal = grupo.getNombre();
+	                out = true;
+	            }
+	        } 
+	        // Si sí es un caso especial y coincide con el grupo que buscamos, lo guardamos y salimos del bucle.
+	        else if (grupoEspecial.equals(group)) 
+	        {
+	            grupoFinal = grupo.getNombre();
+	            out = true;
+	        }
+
+	        // Avanzamos al siguiente grupo en la lista.
+	        index++;
+	    }
+
+	    // Si terminamos de recorrer la lista y no encontramos un grupo válido, lanzamos un error.
+	    if (grupoFinal.isEmpty()) 
+	    {
+	        throw new HorariosError(404, "No se ha encontrado ningún curso válido para: " + group);
+	    }
+
+	    // Finalmente, devolvemos el nombre del grupo que encontramos.
+	    return grupoFinal;
 	}
 	
 }

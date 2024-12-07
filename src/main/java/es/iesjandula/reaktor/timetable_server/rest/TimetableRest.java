@@ -49,11 +49,14 @@ import es.iesjandula.reaktor.timetable_server.models.Rol;
 import es.iesjandula.reaktor.timetable_server.models.Student;
 import es.iesjandula.reaktor.timetable_server.models.Teacher;
 import es.iesjandula.reaktor.timetable_server.models.TeacherMoment;
+import es.iesjandula.reaktor.timetable_server.models.entities.ActitudePointsEntity;
 import es.iesjandula.reaktor.timetable_server.models.entities.ActividadEntity;
 import es.iesjandula.reaktor.timetable_server.models.entities.AsignaturaEntity;
 import es.iesjandula.reaktor.timetable_server.models.entities.AulaEntity;
 import es.iesjandula.reaktor.timetable_server.models.entities.GrupoEntity;
+import es.iesjandula.reaktor.timetable_server.models.entities.InfoErrorEntity;
 import es.iesjandula.reaktor.timetable_server.models.entities.ProfesorEntity;
+import es.iesjandula.reaktor.timetable_server.models.entities.StudentsEntity;
 import es.iesjandula.reaktor.timetable_server.models.entities.TimeSlotEntity;
 import es.iesjandula.reaktor.timetable_server.models.parse.Actividad;
 import es.iesjandula.reaktor.timetable_server.models.parse.Asignatura;
@@ -68,15 +71,18 @@ import es.iesjandula.reaktor.timetable_server.models.parse.HorarioGrup;
 import es.iesjandula.reaktor.timetable_server.models.parse.HorarioProf;
 import es.iesjandula.reaktor.timetable_server.models.parse.Profesor;
 import es.iesjandula.reaktor.timetable_server.models.parse.TimeSlot;
+import es.iesjandula.reaktor.timetable_server.repository.IActitudePointsRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IActividadRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IAlumnoRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IAsignaturaRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IAulaRepository;
 import es.iesjandula.reaktor.timetable_server.repository.ICursosRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IGrupoRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IInfoErrorRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IProfesorRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IPuntosConvivenciaALumnoCursoRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IPuntosConvivenciaRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IStudentsRepository;
 import es.iesjandula.reaktor.timetable_server.repository.ITimeSlotRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IVisitasServicioRepository;
 import es.iesjandula.reaktor.timetable_server.utils.JPAOperations;
@@ -161,6 +167,17 @@ public class TimetableRest
 
 	@Autowired
 	private IActividadRepository actividadRepo;
+	
+	//---------------Este es para getListPointsCoexistence
+	@Autowired
+	private IActitudePointsRepository iActitudePointsRepo;
+
+	
+	@Autowired 
+	private IInfoErrorRepository iInfoErrorRepo;
+
+	@Autowired
+	private IStudentsRepository iStudentsRepo;
 
 	public TimetableRest()
 	{
@@ -1330,6 +1347,7 @@ public class TimetableRest
 
 	/**
 	 * Method gettingValuesOfHorarioAsig
+
 	 *
 	 * @param horarioAsigNodeList
 	 * @param horarioAsigList
@@ -1595,6 +1613,7 @@ public class TimetableRest
 	 */
 	@RequestMapping(value = "/get/teachers", produces = "application/json")
 	public ResponseEntity<?> getProfesores(HttpSession session)
+
 	{
 		try
 		{
@@ -1648,6 +1667,7 @@ public class TimetableRest
 	 */
 	@RequestMapping(value = "/get/courses", produces = "application/json")
 	public ResponseEntity<?> getListCourse(HttpSession session)
+
 	{
 		List<Course> listaCurso = new ArrayList<>();
 		Course curso;
@@ -1957,6 +1977,7 @@ public class TimetableRest
 	 */
 	@RequestMapping(value = "/get/teachersubject", produces = "application/json")
 	public ResponseEntity<?> getTeacherSubject(@RequestParam(required = true) String courseName, HttpSession session)
+
 	{
 		try
 		{
@@ -2754,6 +2775,7 @@ public class TimetableRest
 	 */
 	@RequestMapping(value = "/get/grupo/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
 	public ResponseEntity<?> getGroupSchedule(@RequestParam(required = true, name = "group") String grupo)
+
 	{
 		try
 		{
@@ -2960,6 +2982,7 @@ public class TimetableRest
 	 */
 	@RequestMapping(value = "/get/teacher/Classroom", produces = "application/json")
 	public ResponseEntity<?> getTeacherClassroom(@RequestHeader(required = true) String name,
+
 			@RequestHeader(required = true) String lastname, HttpSession session)
 	{
 		try
@@ -3031,7 +3054,7 @@ public class TimetableRest
 
 								TimeSlot tramoActual = null;
 
-								tramoActual = this.gettingTramoActual(centro, actualTime, tramoActual);
+							//	tramoActual = this.gettingTramoActual(centro, actualTime, tramoActual);
 
 								if (tramoActual != null)
 								{
@@ -3595,15 +3618,18 @@ public class TimetableRest
 
 	/**
 	 * Method getListPointsCoexistence
+
 	 * 
 	 * @return ResponseEntity
 	 */
 	@RequestMapping(value = "/get/points", produces = "application/json")
 	public ResponseEntity<?> getListPointsCoexistence()
+
+
 	{
 		try
 		{
-			List<ActitudePoints> listActitudePoints = this.util.loadPoints();
+			List<ActitudePoints> listActitudePoints = this.iActitudePointsRepo.findAllActitudePoints();
 
 			// --CHECK IF THE LIST OF ACTITUDE POINTS IS NOT EMPTY--
 			if (!listActitudePoints.isEmpty())
@@ -3634,6 +3660,7 @@ public class TimetableRest
 
 	@RequestMapping(value = "/get/coursenames", produces = "application/json")
 	public ResponseEntity<?> getCourseNames()
+
 	{
 		try
 		{
@@ -3656,21 +3683,23 @@ public class TimetableRest
 	@RequestMapping(value = "/send/csv-alumnos", consumes = "multipart/form-data")
 	public ResponseEntity<?> loadStudents(@RequestPart(name = "csvFile", required = true) MultipartFile csvFile)
 	{
-		try
-		{
-			byte[] content = csvFile.getBytes();
-			this.students = this.studentOperation.parseStudent(content);
-			return ResponseEntity.ok().body(students);
-		} catch (HorariosError exception)
-		{
-			log.error("El fichero introducido no contiene los datos de los alumnos bien formados", exception);
-			return ResponseEntity.status(406).body(exception.toMap());
-		} catch (Exception exception)
-		{
-			log.error("Error de servidor", exception);
-			return ResponseEntity.status(500).body("Error de servidor " + exception.getStackTrace());
+		  try
+		    {
+		        byte[] content = csvFile.getBytes();  // Obtiene el contenido del archivo CSV en un arreglo de bytes.
+		        this.students = this.studentOperation.parseStudent(content);  // Llama a un método para procesar los datos del archivo CSV y convertirlos en objetos de estudiantes.
+		        return ResponseEntity.ok().body(students);  // Devuelve los datos de los estudiantes procesados.
+		    } 
+		    catch (HorariosError exception)
+		    {
+		        log.error("El fichero introducido no contiene los datos de los alumnos bien formados", exception);
+		        return ResponseEntity.status(406).body(exception.toMap());  // Si hay un error específico, responde con un error 406.
+		    } 
+		    catch (Exception exception)
+		    {
+		        log.error("Error de servidor", exception);
+		        return ResponseEntity.status(500).body("Error de servidor " + exception.getStackTrace());  // Si ocurre un error general, responde con un error 500.
+		    }
 		}
-	}
 
 	@RequestMapping(value = "send/csv-planos", consumes = "multipart/form-data")
 	public ResponseEntity<?> loadPlanos(@RequestPart(name = "csvFile", required = true) MultipartFile csvFile)
@@ -3698,14 +3727,19 @@ public class TimetableRest
 	@RequestMapping(value = "/get/classroom-planos", produces = "application/json")
 	public ResponseEntity<?> getAllClassroom(@RequestParam(required = false) String planta)
 	{
-		try
-		{
-			return ResponseEntity.ok().body(this.util.buscarPorPlanta(planta, this.aulas));
-		} catch (HorariosError exception)
-		{
-			log.error("Error al filtrar las aulas", exception);
-			return ResponseEntity.status(exception.getCode()).body(exception.toMap());
-		} catch (Exception exception)
+		   try
+		    {
+		        List<AulaEntity> aulas;
+		        if (planta != null) {
+		            // Si se proporciona la planta, filtramos por planta.
+		            aulas = this.aulaRepo.findByPlanta(planta);
+		        } else {
+		            // Si no se proporciona planta, obtenemos todas las aulas.
+		            aulas = this.aulaRepo.findAll();
+		        }
+		        return ResponseEntity.ok().body(aulas); // devueve las aulas que encuentre
+		    }
+		catch (Exception exception)
 		{
 			log.error("Error de servidor", exception);
 			return ResponseEntity.status(500).body("Error de servidor " + exception.getStackTrace());
@@ -3714,30 +3748,64 @@ public class TimetableRest
 
 	@RequestMapping(value = "/send/error-info", consumes = "application/json")
 	public ResponseEntity<?> sendErrorInfo(@RequestBody(required = false) InfoError objectError)
+
 	{
-		this.infoError = objectError;
-		return ResponseEntity.ok().build();
+	 try {
+		    // Convertir el DTO InfoError a la entidad InfoErrorEntity
+	        InfoErrorEntity infoErrorEntity = new InfoErrorEntity();
+	        infoErrorEntity.setHeaderInfo(objectError.getHeaderInfo());
+	        infoErrorEntity.setInfoError(objectError.getInfoError());
+	        infoErrorEntity.setWait(objectError.getWait());
+
+	        // Guardar en la base de datos usando el repositorio
+	        this.iInfoErrorRepo.save(infoErrorEntity); // Usamos save para un solo objeto de tipo entidad
+
+
+	        // Devuelve una respuesta exitosa (HTTP 200)
+	        return ResponseEntity.ok().build();
+	    } catch (Exception exception) {
+	        log.error("Error al almacenar la información del error", exception);
+	        return ResponseEntity.status(500).body("Error de servidor: " + exception.getMessage());
+	    }
 	}
 
 	@RequestMapping(value = "/get/error-info", produces = "application/json")
 	public ResponseEntity<?> getInfoError()
 	{
-		return ResponseEntity.ok().body(this.infoError);
+		try 
+		{
+			List<InfoErrorEntity>errorInfoList=this.iInfoErrorRepo.findAll();
+			
+			return ResponseEntity.ok().body(errorInfoList);
+			
+		}catch(Exception exception) 
+		{
+			log.error("Error al obtner la informacion del error", exception);
+			return ResponseEntity.status(500).body("Error al obtner la informacion"); 
+		}
+		
 	}
 
 	@RequestMapping(value = "/check-data", produces = "application/json")
 	public ResponseEntity<?> checkServerData()
 	{
 		Map<String, String> errorMap = new HashMap<String, String>();
-		if (this.centroPdfs == null)
+		
+		Long contadorActividad=actividadRepo.count();
+		
+		Long contadorStudents=iStudentsRepo.count(); 
+				
+		Long contadorAulas=aulaRepo.count();
+		
+		if (contadorActividad == 0 || contadorActividad == null)
 		{
 			errorMap.put("error", "Error de datos en general");
 			return ResponseEntity.status(400).body(errorMap);
-		} else if (this.students == null || this.students.isEmpty())
+		} else if (contadorStudents == 0 || contadorStudents == null)
 		{
 			errorMap.put("error", "Error de datos de estudiantes");
 			return ResponseEntity.status(400).body(errorMap);
-		} else if (this.aulas == null || this.students.isEmpty())
+		} else if (contadorAulas == 0 || contadorAulas == null)
 		{
 			errorMap.put("error", "Error de datos de planos");
 			return ResponseEntity.status(400).body(errorMap);
@@ -3746,7 +3814,7 @@ public class TimetableRest
 			return ResponseEntity.ok().body("Todo correcto");
 		}
 	}
-
+	//sin tocar//
 	@RequestMapping(value = "/get/aula-now", produces = "application/json")
 	public ResponseEntity<?> getCurrentClassroom(@RequestParam String numIntAu, @RequestParam String abreviatura,
 			@RequestParam String nombre)
@@ -3757,6 +3825,7 @@ public class TimetableRest
 			Aula aula = new Aula(numIntAu, abreviatura, nombre);
 
 			// Buscamos el aula
+			//recuperar aulas
 			List<Aula> aulas = this.centroPdfs.getDatos().getAulas().getAula();
 
 			if (!aulas.contains(aula))
@@ -3794,6 +3863,7 @@ public class TimetableRest
 		}
 	}
 
+	//sin hacer//
 	@RequestMapping(method = RequestMethod.POST, value = "/send/sancion", consumes = "application/json")
 	public ResponseEntity<?> sendSancion(@RequestBody(required = true) Student student,
 			@RequestParam(name = "value", required = true) Integer value,
@@ -3834,8 +3904,11 @@ public class TimetableRest
 	{
 		try
 		{
-			String course = this.util.parseStudentGroup(studentCourse,
-					this.centroPdfs.getDatos().getGrupos().getGrupo());
+			  // Recupera los grupos válidos desde la base de datos
+            List<GrupoEntity> grupos = grupoRepo.findAllValidGroups();
+
+            // Procesa el grupo del estudiante
+            String course = util.parseStudentGroup(studentCourse, grupos);
 
 			// Se coloca un mapa ya que los cursos de los datos generales pueden contener
 			// caracteres que el front no lee bien y con el mapa forzamos a mandarlos
@@ -3858,13 +3931,11 @@ public class TimetableRest
 	{
 		try
 		{
-			List<Student> students = this.operations.findStudentBathroom(this.students);
+			 // Realizamos la consulta directamente en el repositorio
+            List<StudentsEntity> students = iStudentsRepo.findAllByInBathroomTrue();
+            //Esto es para que te compruebe si hay estudiantes en el baño devolviendo un null
 			students = students.isEmpty() ? null : students;
 			return ResponseEntity.ok().body(students);
-		} catch (HorariosError exception)
-		{
-			log.error("Error al encontrar los estudiantes en el baño", exception);
-			return ResponseEntity.status(exception.getCode()).body(exception.toMap());
 		} catch (Exception exception)
 		{
 			log.error("Error de servidor", exception);

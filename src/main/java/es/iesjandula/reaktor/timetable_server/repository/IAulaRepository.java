@@ -14,4 +14,6 @@ public interface IAulaRepository extends JpaRepository<AulaEntity, String>
 {
 	@Query("SELECT new es.iesjandula.reaktor.timetable_server.models.parse.Aula(a) FROM AulaEntity a ")
 	public List<Aula> recuperaListadoAulas();
+	
+	 List<AulaEntity> findByPlanta(String planta);  // Método para buscar aulas por planta.
 }

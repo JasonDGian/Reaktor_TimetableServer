@@ -13,8 +13,8 @@ import es.iesjandula.reaktor.timetable_server.models.parse.TimeSlot;
 public interface ITimeSlotRepository extends JpaRepository<TimeSlotEntity, String>
 {
 
-	
 	 @Query( "SELECT new es.iesjandula.reaktor.timetable_server.models.parse.TimeSlot(t) FROM TimeSlotEntity t" )
 	 public List<TimeSlot> recuperaListadoTramosHorarios();
 	
+	 
 }

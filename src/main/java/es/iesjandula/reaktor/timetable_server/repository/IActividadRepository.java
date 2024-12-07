@@ -28,4 +28,6 @@ public interface IActividadRepository extends JpaRepository<ActividadEntity, Str
 	@Query( "SELECT ae FROM ActividadEntity ae WHERE ae.tramo.numTr = :tramoId AND ae.profesor.numIntPR = :profesorId")
 	public Optional<ActividadEntity> buscaActividadEntityPorTramoYProfesor( @Param(value="tramoId") String tramoId, @Param( value = "profesorId") String profesorId );
 	
+	
+	
 }
