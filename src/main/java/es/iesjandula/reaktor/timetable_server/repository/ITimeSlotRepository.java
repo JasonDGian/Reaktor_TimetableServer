@@ -1,6 +1,7 @@
 package es.iesjandula.reaktor.timetable_server.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +16,8 @@ public interface ITimeSlotRepository extends JpaRepository<TimeSlotEntity, Strin
 
 	 @Query( "SELECT new es.iesjandula.reaktor.timetable_server.models.parse.TimeSlot(t) FROM TimeSlotEntity t" )
 	 public List<TimeSlot> recuperaListadoTramosHorarios();
+	 
+	 public List<TimeSlotEntity> findByDayNumber( String daynumber );
 	
 	 
 }

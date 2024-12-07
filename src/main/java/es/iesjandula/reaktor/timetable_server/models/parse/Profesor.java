@@ -14,10 +14,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
 public class Profesor implements Comparable<Profesor>
 {
-	@Id
 	/** Attribute numIntPR*/
 	private String numIntPR;
 	

@@ -14,10 +14,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
 public class Grupo implements Comparable<Grupo>
 {
-	@Id
 	/** Attribute numIntGr*/
 	private String numIntGr;
 	

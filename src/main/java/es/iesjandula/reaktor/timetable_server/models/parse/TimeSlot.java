@@ -14,10 +14,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
 public class TimeSlot
 {
-	@Id
 	/** Attribute numTr */
 	private String numTr;
 
