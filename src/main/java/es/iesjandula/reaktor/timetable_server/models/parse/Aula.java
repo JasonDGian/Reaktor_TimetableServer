@@ -1,8 +1,6 @@
 package es.iesjandula.reaktor.timetable_server.models.parse;
 
 import es.iesjandula.reaktor.timetable_server.models.entities.AulaEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

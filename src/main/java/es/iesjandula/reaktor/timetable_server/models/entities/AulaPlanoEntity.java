@@ -1,6 +1,5 @@
 package es.iesjandula.reaktor.timetable_server.models.entities;
 
-import es.iesjandula.reaktor.timetable_server.models.parse.Aula;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -16,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class AulaPlano 
+public class AulaPlanoEntity 
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,16 +31,18 @@ public class AulaPlano
     private double top;
 
     /** Medida en el eje x derecho */
-    private double right;
+    private double rightSide;
 
     /** Medida en el eje x izquierdo */
-    private double left;
+    private double leftSide;
 
     /** Planta en la que se encuentra el aula */
     private String planta;
-
+    
     /** Aula que referencia */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "aula_id") // Esto vincula el aula con el plano
-    private Aula aula;
+    @JoinColumn(name = "numIntAu") // Esto vincula el aula con el plano
+    private AulaEntity aula;
+    
+
 }
