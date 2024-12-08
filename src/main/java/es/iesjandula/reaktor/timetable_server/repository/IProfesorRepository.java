@@ -25,5 +25,13 @@ public interface IProfesorRepository extends JpaRepository<ProfesorEntity, Strin
 		       @Param(value = "nombre") String nombre,
 		       @Param(value = "primerApellido") String primerApellido,
 		       @Param(value = "segundoApellido") String segundoApellido);
+	
+	Optional<Profesor> findByNumIntPR(String numIntPR);
+	
+    List<Profesor> findByNombreContainingIgnoreCase(String nombre);
+	
+	
+	
+	
 
 }

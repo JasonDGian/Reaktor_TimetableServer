@@ -1,5 +1,6 @@
 package es.iesjandula.reaktor.timetable_server.repository;
 
+
 import java.util.List;
 import java.util.Optional;
 
@@ -19,5 +20,10 @@ public interface ITimeSlotRepository extends JpaRepository<TimeSlotEntity, Strin
 	 
 	 public List<TimeSlotEntity> findByDayNumber( String daynumber );
 	
+	 public  Optional<TimeSlot> findByNumTr(String numTr);
+	    
+	 // Busca los tramos horarios (TimeSlot) cuyo horario de inicio es antes del valor proporcionado
+	 // y cuyo horario de fin es después del valor proporcionado.
+	 List<TimeSlot> findByStartHourBeforeAndEndHourAfter(String start, String end);
 	 
 }

@@ -29,5 +29,10 @@ public interface IActividadRepository extends JpaRepository<ActividadEntity, Str
 	public Optional<ActividadEntity> buscaActividadEntityPorTramoYProfesor( @Param(value="tramoId") String tramoId, @Param( value = "profesorId") String profesorId );
 	
 	
+	List<Actividad> findByTramo(String tramo);
+	
+    List<Actividad> findByAsignatura_NumIntAs(String numIntAs);
+	
+	
 	
 }

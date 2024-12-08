@@ -23,5 +23,6 @@ public interface IStudentsRepository extends JpaRepository<StudentsEntity, Long>
    
     @Query( "SELECT new es.iesjandula.reaktor.timetable_server.models.Student(s) FROM StudentsEntity s" )
     public List<Student> recuperaListadoEstudiantes();
-    
+ 
+    List<StudentsEntity> findByCourse(String course);
 }

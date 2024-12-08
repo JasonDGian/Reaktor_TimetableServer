@@ -1,6 +1,7 @@
 package es.iesjandula.reaktor.timetable_server.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,5 +22,9 @@ public interface IGrupoRepository extends JpaRepository<GrupoEntity, String>
 	// no están en la lista de exclusión definida en la consulta (NOT IN).
 	@Query("SELECT g FROM GrupoEntity g WHERE g.nombre NOT IN ('GRecr', 'Guardia Biblioteca', 'Guardias')")
     List<GrupoEntity> findAllValidGroups();
+	
+	
+    
+    List<Grupo> findAllByNumIntGrIn(List<String> numIntGr);
 	
 }

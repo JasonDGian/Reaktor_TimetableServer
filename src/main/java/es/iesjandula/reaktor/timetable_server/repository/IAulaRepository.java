@@ -18,5 +18,11 @@ public interface IAulaRepository extends JpaRepository<AulaEntity, String>
 	
 	public Optional<AulaEntity> findByNombre( String nombre );
 	
+	public Optional<Aula> findByNumIntAu(String numIntAu);
+	
 	 List<AulaEntity> findByPlanta(String planta);  // Método para buscar aulas por planta.
+	 
+	 List<Aula> findByAbreviaturaContaining(String abreviatura);
+	 
+	 
 }

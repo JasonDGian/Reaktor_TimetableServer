@@ -75,6 +75,7 @@ import es.iesjandula.reaktor.timetable_server.repository.IActitudePointsReposito
 import es.iesjandula.reaktor.timetable_server.repository.IActividadRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IAlumnoRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IAsignaturaRepository;
+import es.iesjandula.reaktor.timetable_server.repository.IAulaPlanoRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IAulaRepository;
 import es.iesjandula.reaktor.timetable_server.repository.ICursosRepository;
 import es.iesjandula.reaktor.timetable_server.repository.IGrupoRepository;
@@ -177,7 +178,10 @@ public class TimetableRest
 
 	@Autowired
 	private IStudentsRepository iStudentsRepo;
-
+	
+	@Autowired
+	private IAulaPlanoRepository iAulaPlanoRepo;
+	
 	public TimetableRest()
 	{
 		this.util = new TimeTableUtils();
@@ -3748,30 +3752,44 @@ public class TimetableRest
 																										// un error 500.
 		}
 	}
+/*
+	@RequestMapping(value = "/send/csv-planos", consumes = "multipart/form-data")
+	public ResponseEntity<?> loadPlanos(@RequestPart(name = "csvFile", required = true) MultipartFile csvFile) {
+	    try {
+	        byte[] content = csvFile.getBytes(); // Obtiene el contenido del archivo CSV en un arreglo de bytes.
 
-	@RequestMapping(value = "send/csv-planos", consumes = "multipart/form-data")
-	public ResponseEntity<?> loadPlanos(@RequestPart(name = "csvFile", required = true) MultipartFile csvFile)
-	{
-		try
-		{
-			byte[] content = csvFile.getBytes();
-			if (!csvFile.getOriginalFilename().endsWith(".csv"))
-			{
-				throw new HorariosError(406, "El fichero no es un csv");
-			}
-			this.aulas = this.util.parseAulasPlano(content);
-			return ResponseEntity.ok().body(aulas);
-		} catch (HorariosError exception)
-		{
-			log.error("El fichero introducido no contiene los datos de los planos bien formados", exception);
-			return ResponseEntity.status(406).body(exception.toMap());
-		} catch (Exception exception)
-		{
-			log.error("Error de servidor", exception);
-			return ResponseEntity.status(500).body("Error de servidor " + exception.getStackTrace());
-		}
+	        // Verifica que el archivo sea un CSV
+	        if (!csvFile.getOriginalFilename().endsWith(".csv")) {
+	            throw new HorariosError(406, "El fichero no es un csv");
+	        }
+	        
+	        // Parsea el CSV y lo convierte en una lista de objetos AulaPlano
+	        //esta mal porque hay que intanciar paseAulas arriba como parseAlumnos
+	        List<AulaPlano> planos = parseAulasPlano(content); // Método parseAulasPlano adaptado para base de datos.
+
+	        // Guarda los planos en la base de datos
+	        this.savePlanosInDatabase(planos);
+
+	        return ResponseEntity.ok().body(planos); // Devuelve los planos procesados.
+		
+	    } catch (HorariosError exception) {
+	        log.error("El fichero introducido no contiene los datos de los planos bien formados", exception);
+	        return ResponseEntity.status(406).body(exception.toMap()); // Responde con error 406 si el archivo está mal formado.
+	    } catch (Exception exception) {
+	        log.error("Error de servidor", exception);
+	        return ResponseEntity.status(500).body("Error de servidor " + exception.getStackTrace()); // Responde con error 500 si ocurre un error inesperado.
+	    }
 	}
 
+	// Método adaptado para guardar los planos en la base de datos
+	private void savePlanosInDatabase(List<AulaPlano> planos) {
+	    // Guarda todos los planos recibidos en la base de datos
+	    for (AulaPlano plano : planos) {
+	        log.debug("Almacenando plano: {}", plano);
+	        //////////// iAulaPlanoRepo.save(plano); esta comentado porque da problemas el save////////////////////////////
+	    }
+	}
+*/
 	@RequestMapping(value = "/get/classroom-planos", produces = "application/json")
 	public ResponseEntity<?> getAllClassroom(@RequestParam(required = false) String planta)
 	{
@@ -3868,51 +3886,52 @@ public class TimetableRest
 	// sin tocar//
 	@RequestMapping(value = "/get/aula-now", produces = "application/json")
 	public ResponseEntity<?> getCurrentClassroom(@RequestParam String numIntAu, @RequestParam String abreviatura,
-			@RequestParam String nombre)
-	{
-		try
-		{
-			Map<String, Object> infoAula = new HashMap<String, Object>();
-			// recibe por parametro
-			Aula aula = new Aula(numIntAu, abreviatura, nombre);
+	        @RequestParam String nombre) {
+	    try {
+	        Map<String, Object> infoAula = new HashMap<String, Object>();
+	        // Recibe por parámetro
+	        Aula aula = new Aula(numIntAu, abreviatura, nombre);
 
-			// Buscamos el aula
-			// recuperar aulas
-			List<Aula> aulas = this.centroPdfs.getDatos().getAulas().getAula();
+	        // Buscamos el aula
+	        // Recuperar aulas
+	        Optional<Aula> optAula = aulaRepo.findByNumIntAu(numIntAu);
 
-			if (!aulas.contains(aula))
-			{
-				throw new HorariosError(404, "El aula seleccionada no se encuentra en los datos proporcionados");
-			}
+	        if (!optAula.isPresent()) {
+	            throw new HorariosError(404, "El aula seleccionada no se encuentra en los datos proporcionados");
+	        }
 
-			// Obtenemos el profesor que se encuentra actualmente en el aula
-			Profesor profesor = this.util.searchTeacherAulaNow(this.centroPdfs, aula);
-			// Obtenemos la asignatura que se imparte actualmente en el aula
-			Map<String, Object> asignaturaActividad = this.util.searchSubjectAulaNow(centroPdfs, profesor);
-			// Sacamos la asignatura del mapa
-			Asignatura asignatura = (Asignatura) asignaturaActividad.get("asignatura");
-			// Sacamos la actividad del mapa
-			Actividad actividad = (Actividad) asignaturaActividad.get("actividad");
-			// Sacamos el grupo que se encuentra en el aula
-			List<Grupo> grupos = this.util.searchGroupAulaNow(centroPdfs, actividad);
-			// Sacamos los alumnos que se encuentran en el aula
-			List<Student> alumnos = this.util.getAlumnosAulaNow(grupos, this.students);
+	        // Obtenemos el profesor que se encuentra actualmente en el aula
+	        Profesor profesor = profesorRepo.findByNumIntPR(optAula.get().getNumIntAu())
+	                .orElseThrow(() -> new HorariosError(404, "Profesor no encontrado"));
 
-			infoAula.put("profesor", profesor);
-			infoAula.put("asignatura", asignatura);
-			infoAula.put("grupo", grupos);
-			infoAula.put("alumnos", alumnos);
+	        // Obtenemos la asignatura que se imparte actualmente en el aula
+	        Map<String, Object> asignaturaActividad = this.util.searchSubjectAulaNow(centroPdfs, profesor);
 
-			return ResponseEntity.ok().body(infoAula);
-		} catch (HorariosError exception)
-		{
-			log.error("Error al mostrar la informacion del aula", exception);
-			return ResponseEntity.status(exception.getCode()).body(exception.toMap());
-		} catch (Exception exception)
-		{
-			log.error("Error de servidor", exception);
-			return ResponseEntity.status(500).body("Error de servidor " + exception.getStackTrace());
-		}
+	        // Sacamos la asignatura del mapa
+	        Asignatura asignatura = (Asignatura) asignaturaActividad.get("asignatura");
+
+	        // Sacamos la actividad del mapa
+	        Actividad actividad = (Actividad) asignaturaActividad.get("actividad");
+
+	        // Sacamos el grupo que se encuentra en el aula
+	        List<Grupo> grupos = this.util.searchGroupAulaNow(centroPdfs, actividad);
+
+	        // Sacamos los alumnos que se encuentran en el aula
+	        List<Student> alumnos = this.util.getAlumnosAulaNow(grupos,new ArrayList<Student>());
+
+	        infoAula.put("profesor", profesor);
+	        infoAula.put("asignatura", asignatura);
+	        infoAula.put("grupo", grupos);
+	        infoAula.put("alumnos", alumnos);
+
+	        return ResponseEntity.ok().body(infoAula);
+	    } catch (HorariosError exception) {
+	        log.error("Error al mostrar la informacion del aula", exception);
+	        return ResponseEntity.status(exception.getCode()).body(exception.toMap());
+	    } catch (Exception exception) {
+	        log.error("Error de servidor", exception);
+	        return ResponseEntity.status(500).body("Error de servidor " + exception.getStackTrace());
+	    }
 	}
 
 	// sin hacer//
