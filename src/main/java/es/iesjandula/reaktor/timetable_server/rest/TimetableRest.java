@@ -21,6 +21,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -3015,12 +3016,14 @@ public class TimetableRest
 	// Debemos crear un endpoint de carga o dejarlo como estaba.
 	/**
 	 * Method getListPointsCoexistence
+
 	 * 
 	 * 
 	 * @return ResponseEntity
 	 */
 	@RequestMapping(value = "/get/points", produces = "application/json")
 	public ResponseEntity<?> getListPointsCoexistence()
+
 
 	{
 		try
@@ -3191,35 +3194,42 @@ public class TimetableRest
 		}
 	}
 
-	// TODO : Arreglar, ver nota dentro.
+	// TODO : lo que he arreglado es lo siguiente: 
+	// TODO : Nota para Jose -> Probando en Postman produce error. 
+	// Dice que debe de asignarse un ID para el error. 
+	// Esto probablemente porque el objeto espera un ID manual no uno auto-generado. 
+	// Como identificador de error tipo 402 403 etc.. 
+	// -> Debemos arreglar la correspondencia de atributos / datos entre DTO y Entidad
 	@RequestMapping(value = "/send/error-info", consumes = "application/json")
 	public ResponseEntity<?> sendErrorInfo(@RequestBody(required = false) InfoError objectError)
-
 	{
-		try
-		{
-			// TODO : Nota para Jose -> Probando en Postman produce error. 
-			// Dice que debe de asignarse un ID para el error.
-			// Esto probablemente porque el objeto espera un ID manual no uno auto-generado. 
-			// Como identificador de error tipo 402 403 etc.. 
-			// -> Debemos arreglar la correspondencia de atributos / datos entre DTO y Entidad.
-			
-			// Convertir el DTO InfoError a la entidad InfoErrorEntity
-			InfoErrorEntity infoErrorEntity = new InfoErrorEntity();
-			infoErrorEntity.setHeaderInfo(objectError.getHeaderInfo());
-			infoErrorEntity.setInfoError(objectError.getInfoError());
-			infoErrorEntity.setWait(objectError.getWait());
+	    try {
+	        // Validar si el objeto recibido es nulo
+	        if (objectError == null) {
+	            return ResponseEntity.badRequest().body("El cuerpo de la solicitud no puede estar vacío.");
+	        }
 
-			// Guardar en la base de datos usando el repositorio
-			this.iInfoErrorRepo.saveAndFlush(infoErrorEntity); // Usamos save para un solo objeto de tipo entidad
+	        // Validar si el ID está presente
+	        if (objectError.getId() == null) {
+	            return ResponseEntity.badRequest().body("El campo 'id' es obligatorio y debe asignarse manualmente.");
+	        }
 
-			// Devuelve una respuesta exitosa (HTTP 200)
-			return ResponseEntity.ok().build();
-		} catch (Exception exception)
-		{
-			log.error("Error al almacenar la información del error", exception);
-			return ResponseEntity.status(500).body("Error de servidor: " + exception.getMessage());
-		}
+	        // Convertir el DTO InfoError a la entidad InfoErrorEntity
+	        InfoErrorEntity infoErrorEntity = new InfoErrorEntity();
+	        infoErrorEntity.setId(objectError.getId()); // Asignar el ID manual proporcionado
+	        infoErrorEntity.setHeaderInfo(objectError.getHeaderInfo());
+	        infoErrorEntity.setInfoError(objectError.getInfoError());
+	        infoErrorEntity.setWait(objectError.getWait());
+
+	        // Guardar en la base de datos usando el repositorio
+	        this.iInfoErrorRepo.saveAndFlush(infoErrorEntity);
+
+	        // Devuelve una respuesta exitosa (HTTP 200)
+	        return ResponseEntity.ok().build();
+	    } catch (Exception exception) {
+	        log.error("Error al almacenar la información del error", exception);
+	        return ResponseEntity.status(500).body("Error de servidor: " + exception.getMessage());
+	    }
 	}
 
 	@RequestMapping(value = "/get/error-info", produces = "application/json")
@@ -3239,47 +3249,54 @@ public class TimetableRest
 
 	}
 
-	// TODO: Revisar bloque de erroes.
+	// TODO: Lo que he arreglado: 
+	// TODO: Revisitar este bloque de control para los errores.
+			// Se puede mejorar haciendo que devuelva un mensaje mas inteligente. 
+			// Haciendo una concatenación en la cadena que define los errores. 
+			// Actualmente si el XML no está cargado no avisa de los demas errores.
+			// Si el XML si está cargado pero el resto no solo informa de los estudiantes. 
+			// No refleja la situación precisa del servidor.
 	@RequestMapping(value = "/check-data", produces = "application/json")
-	public ResponseEntity<?> checkServerData()
+	public ResponseEntity<?> checkServerData() 
 	{
-		Map<String, String> errorMap = new HashMap<String, String>();
+	    Map<String, Object> responseMap = new HashMap<>();
 
-		Long contadorActividad = actividadRepo.count();
+	    Long contadorActividad = actividadRepo.count();
+	    Long contadorStudents = iStudentsRepo.count();
+	    Long contadorAulas = aulaRepo.count();
 
-		Long contadorStudents = iStudentsRepo.count();
+	    // Construir una lista de errores
+	    List<String> errores = new ArrayList<>();
 
-		Long contadorAulas = aulaRepo.count();
+	    if (contadorActividad == null || contadorActividad == 0) {
+	        errores.add("Error de datos en actividades.");
+	    }
 
-		// TODO: Revisitar este bloque de control para los errores.
-		// Se puede mejorar haciendo que devuelva un mensaje mas inteligente. 
-		// Haciendo una concatenación en la cadena que define los errores. 
-		// Actualmente si el XML no está cargado no avisa de los demas errores.
-		// Si el XML si está cargado pero el resto no solo informa de los estudiantes. 
-		// No refleja la situación precisa del servidor.
-		
-		if (contadorActividad == 0 || contadorActividad == null)
-		{
-			errorMap.put("error", "Error de datos en general");
-			return ResponseEntity.status(400).body(errorMap);
-		} else if (contadorStudents == 0 || contadorStudents == null)
-		{
-			errorMap.put("error", "Error de datos de estudiantes");
-			return ResponseEntity.status(400).body(errorMap);
-		} else if (contadorAulas == 0 || contadorAulas == null)
-		{
-			errorMap.put("error", "Error de datos de planos");
-			return ResponseEntity.status(400).body(errorMap);
-		} else
-		{
-			return ResponseEntity.ok().body("Todo correcto");
-		}
+	    if (contadorStudents == null || contadorStudents == 0) {
+	        errores.add("Error de datos en estudiantes.");
+	    }
+
+	    if (contadorAulas == null || contadorAulas == 0) {
+	        errores.add("Error de datos en aulas.");
+	    }
+
+	    // Si hay errores, devolverlos concatenados
+	    if (!errores.isEmpty()) {
+	        responseMap.put("status", "error");
+	        responseMap.put("errores", errores);
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseMap);
+	    }
+
+	    // Si no hay errores, indicar que todo está correcto
+	    responseMap.put("status", "ok");
+	    responseMap.put("mensaje", "Todos los datos están correctamente cargados.");
+	    return ResponseEntity.ok(responseMap);
 	}
 
 	// TODO: Cambiar por llamadas a BBDD.
-	// sin tocar//
 	@RequestMapping(value = "/get/aula-now", produces = "application/json")
 	public ResponseEntity<?> getCurrentClassroom(@RequestParam String numIntAu, @RequestParam String abreviatura,
+
 			@RequestParam String nombre)
 	{
 		try
@@ -3327,12 +3344,11 @@ public class TimetableRest
 		}
 	}
 
-	// sin hacer//
-	
-	
 	// TODO: Revisar por que devuelve error "NO AUTORIZADO" al hacer petición en Postman.
 	@RequestMapping(method = RequestMethod.POST, value = "/send/sancion", consumes = "application/json")
 	public ResponseEntity<?> sendSancion(@RequestBody(required = true) Student student,
+
+
 			@RequestParam(name = "value", required = true) Integer value,
 			@RequestParam(name = "description", required = true) String description)
 	{
@@ -3365,8 +3381,8 @@ public class TimetableRest
 			return ResponseEntity.status(500).body("Error de servidor " + exception.getStackTrace());
 		}
 	}
+	
 	// TODO: Ver como interactuar con esto mediante postman. NO entiendo que se espera esta petición por parte del cliente. 
-
 	@RequestMapping(method = RequestMethod.GET, value = "/get/parse-course", produces = "application/json")
 	public ResponseEntity<?> localizarAlumno(@RequestParam(name = "course", required = true) String studentCourse)
 	{
